@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { generateAnalysis } from '../services/analysis';
 import { hashUrl } from './reports';
+import { upsertScore } from '../services/scoreCache';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
   apiVersion: '2024-06-20',
@@ -108,6 +109,12 @@ router.post('/confirm', requireAuth, async (req: AuthRequest, res: Response): Pr
         stripePi: paymentIntentId,
       },
     });
+
+    // Cache this URL's score for consistency in future competitor comparisons
+    const overallScore = (analysisData as { overallScore?: number }).overallScore;
+    if (typeof overallScore === 'number') {
+      await upsertScore(url, overallScore).catch(() => {});
+    }
 
     res.json({
       id: report.id,

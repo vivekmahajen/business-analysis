@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { generateAnalysis } from '../services/analysis';
+import { upsertScore } from '../services/scoreCache';
 
 const router = Router();
 
@@ -100,6 +101,11 @@ router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res
         paidAmount: 0,
       },
     });
+    // Cache this URL's score for consistency in future competitor comparisons
+    const overallScore = (analysisData as { overallScore?: number }).overallScore;
+    if (typeof overallScore === 'number') {
+      await upsertScore(url, overallScore).catch(() => {});
+    }
     res.json({
       id: report.id,
       url: report.url,

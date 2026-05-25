@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { getCachedScores } from './scoreCache';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -137,6 +138,24 @@ export async function generateAnalysis(url: string, radius: number): Promise<Rec
 
   if (!analysisJson) {
     throw new Error('Failed to parse analysis response from Claude API');
+  }
+
+  // Substitute cached scores for competitors that have been directly analyzed before
+  const competitors = analysisJson.competitors as Array<{ url?: string; score: number }> | undefined;
+  if (Array.isArray(competitors) && competitors.length > 0) {
+    const competitorUrls = competitors.map(c => c.url).filter((u): u is string => !!u);
+    if (competitorUrls.length > 0) {
+      const cachedScores = await getCachedScores(competitorUrls);
+      if (cachedScores.size > 0) {
+        const crypto = await import('crypto');
+        analysisJson.competitors = competitors.map(c => {
+          if (!c.url) return c;
+          const hash = crypto.createHash('md5').update(c.url.toLowerCase().trim()).digest('hex');
+          const cached = cachedScores.get(hash);
+          return cached !== undefined ? { ...c, score: cached } : c;
+        });
+      }
+    }
   }
 
   return analysisJson;
