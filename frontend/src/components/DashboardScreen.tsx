@@ -3,6 +3,7 @@ import { User, AnalysisEntry } from '../types';
 
 interface Props {
   user: User;
+  isAdmin: boolean;
   saved: AnalysisEntry[];
   urlInput: string;
   setUrlInput: (v: string) => void;
@@ -19,7 +20,7 @@ interface Props {
 const RADII = [1, 5, 10, 25, 50, 100];
 
 export default function DashboardScreen({
-  user, saved, urlInput, setUrlInput, radius, setRadius,
+  user, isAdmin, saved, urlInput, setUrlInput, radius, setRadius,
   onSubmit, onViewReport, onDeleteReport, onLogout, error, setError,
 }: Props) {
   const [checking, setChecking] = useState(false);
@@ -52,9 +53,12 @@ export default function DashboardScreen({
             SiteAnalyzer <span className="text-blue-600">Pro</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500 hidden sm:block">
-              {user.name}
-            </span>
+            <span className="text-sm text-gray-500 hidden sm:block">{user.name}</span>
+            {isAdmin && (
+              <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200">
+                Admin
+              </span>
+            )}
             <button
               onClick={onLogout}
               className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
@@ -97,9 +101,13 @@ export default function DashboardScreen({
               <button
                 type="submit"
                 disabled={checking}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap"
+                className={`font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap text-white disabled:opacity-60 ${
+                  isAdmin
+                    ? 'bg-amber-500 hover:bg-amber-600'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                {checking ? 'Checking…' : 'Analyze — $99'}
+                {checking ? 'Checking…' : isAdmin ? 'Analyze — Free' : 'Analyze — $99'}
               </button>
             </div>
 
@@ -111,7 +119,9 @@ export default function DashboardScreen({
           </form>
 
           <p className="text-xs text-gray-400 mt-4">
-            $99 per report · Free retrieval of existing reports · Reports expire never
+            {isAdmin
+              ? 'Admin account · Reports generated free · No payment required'
+              : '$99 per report · Free retrieval of existing reports · Reports expire never'}
           </p>
         </div>
 

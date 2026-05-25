@@ -1,12 +1,27 @@
 import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
-import { requireAuth, AuthRequest } from '../middleware/auth';
+import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
+import { generateAnalysis } from '../services/analysis';
 
 const router = Router();
 
 function hashUrl(url: string): string {
   return crypto.createHash('md5').update(url.toLowerCase().trim()).digest('hex');
+}
+
+function validateUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const hostname = parsed.hostname;
+    const privatePatterns = [
+      /^localhost$/i, /^127\./, /^10\./, /^192\.168\./,
+      /^172\.(1[6-9]|2[0-9]|3[0-1])\./, /^::1$/,
+    ];
+    return !privatePatterns.some(p => p.test(hostname));
+  } catch {
+    return false;
+  }
 }
 
 // GET /api/reports — list user's reports
@@ -17,7 +32,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
       orderBy: { createdAt: 'desc' },
       select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true },
     });
-    res.json(reports.map(r => ({
+    res.json(reports.map((r: typeof reports[number]) => ({
       id: r.id,
       url: r.url,
       radius: r.radiusMi,
@@ -59,6 +74,42 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
     }
   } catch {
     res.status(500).json({ error: 'Failed to check report' });
+  }
+});
+
+// POST /api/reports/generate — admin-only: generate report without payment
+router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { url, radius } = req.body;
+  if (!url || !radius) {
+    res.status(400).json({ error: 'URL and radius are required' });
+    return;
+  }
+  if (!validateUrl(url)) {
+    res.status(400).json({ error: 'Invalid URL: private/local addresses not allowed' });
+    return;
+  }
+  try {
+    const analysisData = await generateAnalysis(url, Number(radius));
+    const report = await prisma.report.create({
+      data: {
+        userId: req.userId!,
+        url,
+        urlHash: hashUrl(url),
+        radiusMi: Number(radius),
+        reportData: analysisData,
+        paidAmount: 0,
+      },
+    });
+    res.json({
+      id: report.id,
+      url: report.url,
+      radius: report.radiusMi,
+      at: report.createdAt,
+      data: report.reportData,
+    });
+  } catch (err) {
+    console.error('Admin generate error:', err);
+    res.status(500).json({ error: 'Failed to generate report' });
   }
 });
 

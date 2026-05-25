@@ -3,12 +3,13 @@ import { AnalysisEntry } from '../types';
 
 interface Props {
   entry: AnalysisEntry;
+  isAdmin: boolean;
   onViewFree: () => void;
   onGenerateNew: () => void;
   onBack: () => void;
 }
 
-export default function FoundScreen({ entry, onViewFree, onGenerateNew, onBack }: Props) {
+export default function FoundScreen({ entry, isAdmin, onViewFree, onGenerateNew, onBack }: Props) {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
@@ -58,9 +59,13 @@ export default function FoundScreen({ entry, onViewFree, onGenerateNew, onBack }
 
             <button
               onClick={onGenerateNew}
-              className="w-full border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium py-3 rounded-xl transition-colors"
+              className={`w-full font-medium py-3 rounded-xl transition-colors ${
+                isAdmin
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                  : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              Generate Fresh Report — $99
+              {isAdmin ? 'Generate Fresh Report — Free' : 'Generate Fresh Report — $99'}
             </button>
           </div>
 
