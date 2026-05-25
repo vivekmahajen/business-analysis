@@ -1,0 +1,176 @@
+import React, { useState } from 'react';
+import { User, AnalysisEntry } from '../types';
+
+interface Props {
+  user: User;
+  saved: AnalysisEntry[];
+  urlInput: string;
+  setUrlInput: (v: string) => void;
+  radius: number;
+  setRadius: (v: number) => void;
+  onSubmit: (url: string, radius: number) => void;
+  onViewReport: (entry: AnalysisEntry) => void;
+  onDeleteReport: (id: string) => void;
+  onLogout: () => void;
+  error: string;
+  setError: (e: string) => void;
+}
+
+const RADII = [1, 5, 10, 25, 50, 100];
+
+export default function DashboardScreen({
+  user, saved, urlInput, setUrlInput, radius, setRadius,
+  onSubmit, onViewReport, onDeleteReport, onLogout, error, setError,
+}: Props) {
+  const [checking, setChecking] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+    let url = urlInput.trim();
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    setError('');
+    setChecking(true);
+    try {
+      await onSubmit(url, radius);
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="font-syne font-bold text-lg text-gray-900">
+            SiteAnalyzer <span className="text-blue-600">Pro</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500 hidden sm:block">
+              {user.name}
+            </span>
+            <button
+              onClick={onLogout}
+              className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-5xl mx-auto px-6 py-10">
+        {/* URL Input Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-8">
+          <h1 className="font-syne font-bold text-2xl text-gray-900 mb-2">
+            Analyze a Website
+          </h1>
+          <p className="text-gray-500 mb-6">
+            Enter any business website URL and select a competitor search radius.
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                value={urlInput}
+                onChange={e => setUrlInput(e.target.value)}
+                placeholder="https://yourbusiness.com"
+                className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <select
+                value={radius}
+                onChange={e => setRadius(Number(e.target.value))}
+                className="border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                {RADII.map(r => (
+                  <option key={r} value={r}>{r} mile{r !== 1 ? 's' : ''}</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={checking}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap"
+              >
+                {checking ? 'Checking…' : 'Analyze — $99'}
+              </button>
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                {error}
+              </div>
+            )}
+          </form>
+
+          <p className="text-xs text-gray-400 mt-4">
+            $99 per report · Free retrieval of existing reports · Reports expire never
+          </p>
+        </div>
+
+        {/* Saved Reports */}
+        <div>
+          <h2 className="font-syne font-semibold text-lg text-gray-900 mb-4">
+            Your Reports ({saved.length})
+          </h2>
+
+          {saved.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+              <div className="text-4xl mb-3">📊</div>
+              <p className="text-gray-500">No reports yet. Analyze your first website above.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {saved.map(entry => (
+                <div
+                  key={entry.id}
+                  className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 truncate">{entry.data.businessName}</div>
+                    <div className="text-sm text-gray-400 truncate">{entry.url}</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {formatDate(entry.at)} · {entry.radius} mile radius
+                    </div>
+                  </div>
+
+                  <div className="text-right flex-shrink-0">
+                    <div className={`font-syne font-bold text-2xl ${scoreColor(entry.data.overallScore)}`}>
+                      {entry.data.overallScore}
+                    </div>
+                    <div className="text-xs text-gray-400">score</div>
+                  </div>
+
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => onViewReport(entry)}
+                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Delete this report?')) onDeleteReport(entry.id);
+                      }}
+                      className="text-gray-400 hover:text-red-500 px-2 py-2 rounded-lg transition-colors"
+                      title="Delete"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}

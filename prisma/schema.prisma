@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../backend/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String    @db.VarChar(255)
+  email     String    @unique @db.VarChar(255)
+  password  String    @db.VarChar(255)
+  createdAt DateTime  @default(now()) @map("created_at")
+  reports   Report[]
+  payments  Payment[]
+
+  @@map("users")
+}
+
+model Report {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  url        String   @db.VarChar(2048)
+  urlHash    String   @map("url_hash") @db.VarChar(64)
+  radiusMi   Int      @map("radius_mi")
+  reportData Json     @map("report_data")
+  paidAmount Int      @default(9900) @map("paid_amount")
+  stripePi   String?  @map("stripe_pi") @db.VarChar(255)
+  createdAt  DateTime @default(now()) @map("created_at")
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, urlHash], name: "idx_reports_user_url")
+  @@map("reports")
+}
+
+model Payment {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  stripepiId   String   @unique @map("stripe_pi_id") @db.VarChar(255)
+  amountCents  Int      @map("amount_cents")
+  status       String   @db.VarChar(50)
+  reportUrl    String?  @map("report_url") @db.VarChar(2048)
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
