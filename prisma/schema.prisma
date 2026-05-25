@@ -37,7 +37,15 @@ model Report {
   @@map("reports")
 }
 
-model Payment {
+model UrlScoreCache {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  urlHash      String   @unique @map("url_hash") @db.VarChar(64)
+  url          String   @db.VarChar(2048)
+  overallScore Int      @map("overall_score")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("url_score_cache")
+}
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
   stripepiId   String   @unique @map("stripe_pi_id") @db.VarChar(255)
