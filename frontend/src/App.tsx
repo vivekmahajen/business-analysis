@@ -82,20 +82,24 @@ export default function App() {
       } else {
         setPendUrl(url);
         setPendRad(rad);
-        setScreen('payment');
+        // Admins skip payment entirely
+        if (user?.isAdmin) {
+          startGeneration(url, rad);
+        } else {
+          setScreen('payment');
+        }
       }
     } catch (e) {
       setError((e as Error).message);
     }
-  }, []);
+  }, [user]);
 
-  const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+  const startGeneration = useCallback(async (url: string, rad: number, paymentIntentId?: string) => {
     setScreen('gen');
     setStep(0);
     setDone([]);
     setError('');
 
-    // Animate steps in parallel with API call
     const STEPS = 7;
     let currentStep = 0;
     const interval = setInterval(() => {
@@ -107,9 +111,13 @@ export default function App() {
     }, 800);
 
     try {
-      const entry = await api.confirmPayment(paymentIntentId, pendUrl, pendRad) as AnalysisEntry;
+      let entry: AnalysisEntry;
+      if (paymentIntentId) {
+        entry = await api.confirmPayment(paymentIntentId, url, rad) as AnalysisEntry;
+      } else {
+        entry = await api.generateReportAdmin(url, rad) as AnalysisEntry;
+      }
       clearInterval(interval);
-      // Complete all steps
       setDone(Array.from({ length: STEPS }, (_, i) => i));
       setStep(STEPS - 1);
 
@@ -122,9 +130,13 @@ export default function App() {
     } catch (e) {
       clearInterval(interval);
       setError((e as Error).message);
-      setScreen('payment');
+      setScreen(paymentIntentId ? 'payment' : 'dashboard');
     }
-  }, [pendUrl, pendRad, loadReports]);
+  }, [loadReports]);
+
+  const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
+    await startGeneration(pendUrl, pendRad, paymentIntentId);
+  }, [pendUrl, pendRad, startGeneration]);
 
   const viewReport = useCallback((entry: AnalysisEntry) => {
     setReport(entry.data);
@@ -167,6 +179,7 @@ export default function App() {
     return (
       <DashboardScreen
         user={user!}
+        isAdmin={user?.isAdmin ?? false}
         saved={saved}
         urlInput={urlInput}
         setUrlInput={setUrlInput}
@@ -186,8 +199,15 @@ export default function App() {
     return (
       <FoundScreen
         entry={foundRep!}
+        isAdmin={user?.isAdmin ?? false}
         onViewFree={() => viewReport(foundRep!)}
-        onGenerateNew={() => setScreen('payment')}
+        onGenerateNew={() => {
+          if (user?.isAdmin) {
+            startGeneration(pendUrl, pendRad);
+          } else {
+            setScreen('payment');
+          }
+        }}
         onBack={() => setScreen('dashboard')}
       />
     );

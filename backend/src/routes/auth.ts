@@ -5,6 +5,14 @@ import { prisma } from '../lib/prisma';
 
 const router = Router();
 
+function isAdminEmail(email: string): boolean {
+  const adminEmails = (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  return adminEmails.includes(email.toLowerCase());
+}
+
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
   const { name, email, password } = req.body;
   if (!name || !email || !password) {
@@ -23,12 +31,12 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
     }
     const hashed = await bcrypt.hash(password, 12);
     const user = await prisma.user.create({
-      data: { name, email, password: hashed },
-      select: { id: true, name: true, email: true, createdAt: true },
+      data: { name, email, password: hashed, isAdmin: isAdminEmail(email) },
+      select: { id: true, name: true, email: true, isAdmin: true, createdAt: true },
     });
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.status(201).json({ user, token });
-  } catch (err) {
+  } catch {
     res.status(500).json({ error: 'Registration failed' });
   }
 });

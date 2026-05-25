@@ -51,4 +51,10 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ paymentIntentId, url, radius }),
     }),
+
+  generateReportAdmin: (url: string, radius: number) =>
+    request<unknown>('/reports/generate', {
+      method: 'POST',
+      body: JSON.stringify({ url, radius }),
+    }),
 };
