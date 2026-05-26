@@ -30,6 +30,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
