@@ -97,7 +97,8 @@ router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res
         url,
         urlHash: hashUrl(url),
         radiusMi: Number(radius),
-        reportData: analysisData,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        reportData: analysisData as any,
         paidAmount: 0,
       },
     });

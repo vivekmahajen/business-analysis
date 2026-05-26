@@ -104,7 +104,8 @@ router.post('/confirm', requireAuth, async (req: AuthRequest, res: Response): Pr
         url,
         urlHash: hashUrl(url),
         radiusMi: Number(radius),
-        reportData: analysisData,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        reportData: analysisData as any,
         paidAmount: paymentIntent.amount,
         stripePi: paymentIntentId,
       },
