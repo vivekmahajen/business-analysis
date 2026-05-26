@@ -76,52 +76,64 @@ export default function PaymentScreen({ url, radius, onSuccess, onBack, error, s
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name on card</label>
+                <label htmlFor="card-name" className="block text-sm font-medium text-gray-700 mb-1">Name on card</label>
                 <input
+                  id="card-name"
+                  name="card-name"
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
                   placeholder="Jane Smith"
+                  autoComplete="cc-name"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Card number</label>
+                <label htmlFor="card-number" className="block text-sm font-medium text-gray-700 mb-1">Card number</label>
                 <input
+                  id="card-number"
+                  name="card-number"
                   type="text"
                   value={cardNumber}
                   onChange={e => setCardNumber(formatCard(e.target.value))}
                   required
                   placeholder="1234 5678 9012 3456"
                   maxLength={19}
+                  autoComplete="cc-number"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
+                  <label htmlFor="expiry" className="block text-sm font-medium text-gray-700 mb-1">Expiry</label>
                   <input
+                    id="expiry"
+                    name="expiry"
                     type="text"
                     value={expiry}
                     onChange={e => setExpiry(formatExpiry(e.target.value))}
                     required
                     placeholder="MM/YY"
                     maxLength={5}
+                    autoComplete="cc-exp"
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
+                  <label htmlFor="cvc" className="block text-sm font-medium text-gray-700 mb-1">CVC</label>
                   <input
+                    id="cvc"
+                    name="cvc"
                     type="text"
                     value={cvc}
                     onChange={e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4))}
                     required
                     placeholder="123"
                     maxLength={4}
+                    autoComplete="cc-csc"
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

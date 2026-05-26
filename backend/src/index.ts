@@ -26,6 +26,11 @@ const analysisLimiter = rateLimit({
   },
 });
 
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.path} [origin: ${req.headers.origin || 'none'}]`);
+  next();
+});
+
 app.use('/api/auth', authRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);

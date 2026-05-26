@@ -61,39 +61,48 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
                 <input
+                  id="name"
+                  name="name"
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
                   placeholder="Jane Smith"
+                  autoComplete="name"
                   className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
+                id="email"
+                name="email"
                 type="email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
                 placeholder="you@company.com"
+                autoComplete="email"
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
               <input
+                id="password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
                 minLength={8}
                 placeholder="Min. 8 characters"
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
             </div>
