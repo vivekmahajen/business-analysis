@@ -46,6 +46,8 @@ model UrlScoreCache {
 
   @@map("url_score_cache")
 }
+
+model Payment {
   id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId       String   @map("user_id") @db.Uuid
   stripepiId   String   @unique @map("stripe_pi_id") @db.VarChar(255)
