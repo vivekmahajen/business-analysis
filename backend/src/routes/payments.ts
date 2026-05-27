@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { generateAnalysis } from '../services/analysis';
+import { generateGrowthAnalysis } from '../services/growthAnalysis';
 import { hashUrl } from './reports';
 import { upsertScore } from '../services/scoreCache';
 
@@ -14,17 +15,25 @@ const router = Router();
 
 // POST /api/payments/intent — create Stripe PaymentIntent
 router.post('/intent', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
-  const { url, radius } = req.body;
+  const { url, radius, city, state, reportType } = req.body;
   if (!url || !radius) {
     res.status(400).json({ error: 'URL and radius are required' });
     return;
   }
+  const resolvedReportType: string = reportType || 'competitive';
   try {
     const amount = parseInt(process.env.REPORT_PRICE_CENTS || '9900');
     const paymentIntent = await stripe.paymentIntents.create({
       amount,
       currency: 'usd',
-      metadata: { userId: req.userId!, url, radius: String(radius) },
+      metadata: {
+        userId: req.userId!,
+        url,
+        radius: String(radius),
+        city: city || '',
+        state: state || '',
+        reportType: resolvedReportType,
+      },
     });
 
     await prisma.payment.create({
@@ -40,6 +49,7 @@ router.post('/intent', requireAuth, async (req: AuthRequest, res: Response): Pro
     res.json({
       clientSecret: paymentIntent.client_secret,
       publishableKey: process.env.STRIPE_PUBLISHABLE_KEY,
+      reportType: resolvedReportType,
     });
   } catch (err) {
     console.error('Payment intent error:', err);
@@ -94,8 +104,18 @@ router.post('/confirm', requireAuth, async (req: AuthRequest, res: Response): Pr
       data: { status: 'succeeded' },
     });
 
-    // Run Claude analysis
-    const analysisData = await generateAnalysis(url, Number(radius));
+    // Determine report type from payment intent metadata
+    const resolvedReportType = paymentIntent.metadata.reportType || 'competitive';
+    const metaCity = paymentIntent.metadata.city || '';
+    const metaState = paymentIntent.metadata.state || '';
+
+    // Run Claude analysis based on report type
+    let analysisData: Record<string, unknown>;
+    if (resolvedReportType === 'growth') {
+      analysisData = await generateGrowthAnalysis(url, Number(radius), metaCity, metaState);
+    } else {
+      analysisData = await generateAnalysis(url, Number(radius));
+    }
 
     // Save report
     const report = await prisma.report.create({
@@ -108,13 +128,18 @@ router.post('/confirm', requireAuth, async (req: AuthRequest, res: Response): Pr
         reportData: analysisData as any,
         paidAmount: paymentIntent.amount,
         stripePi: paymentIntentId,
+        reportType: resolvedReportType,
+        city: metaCity || null,
+        state: metaState || null,
       },
     });
 
-    // Cache this URL's score for consistency in future competitor comparisons
-    const overallScore = (analysisData as { overallScore?: number }).overallScore;
-    if (typeof overallScore === 'number') {
-      await upsertScore(url, overallScore).catch(() => {});
+    // Cache this URL's score for consistency in future competitor comparisons (competitive only)
+    if (resolvedReportType !== 'growth') {
+      const overallScore = (analysisData as { overallScore?: number }).overallScore;
+      if (typeof overallScore === 'number') {
+        await upsertScore(url, overallScore).catch(() => {});
+      }
     }
 
     res.json({
@@ -123,6 +148,9 @@ router.post('/confirm', requireAuth, async (req: AuthRequest, res: Response): Pr
       radius: report.radiusMi,
       at: report.createdAt,
       data: report.reportData,
+      reportType: report.reportType,
+      city: report.city,
+      state: report.state,
     });
   } catch (err) {
     console.error('Payment confirm error:', err);

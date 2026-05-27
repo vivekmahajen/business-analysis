@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { generateAnalysis } from '../services/analysis';
+import { generateGrowthAnalysis } from '../services/growthAnalysis';
 import { upsertScore } from '../services/scoreCache';
 
 const router = Router();
@@ -31,7 +32,7 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
     const reports = await prisma.report.findMany({
       where: { userId: req.userId! },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true },
+      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, reportType: true, city: true, state: true },
     });
     res.json(reports.map((r: typeof reports[number]) => ({
       id: r.id,
@@ -39,6 +40,9 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
       radius: r.radiusMi,
       at: r.createdAt,
       data: r.reportData,
+      reportType: r.reportType,
+      city: r.city,
+      state: r.state,
     })));
   } catch {
     res.status(500).json({ error: 'Failed to fetch reports' });
@@ -113,10 +117,56 @@ router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res
       radius: report.radiusMi,
       at: report.createdAt,
       data: report.reportData,
+      reportType: report.reportType,
+      city: report.city,
+      state: report.state,
     });
   } catch (err) {
     console.error('Admin generate error:', err);
     res.status(500).json({ error: 'Failed to generate report' });
+  }
+});
+
+// POST /api/reports/generate-growth — admin-only: generate growth report without payment
+router.post('/generate-growth', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { url, radius, city, state } = req.body;
+  if (!url || !radius) {
+    res.status(400).json({ error: 'URL and radius are required' });
+    return;
+  }
+  if (!validateUrl(url)) {
+    res.status(400).json({ error: 'Invalid URL: private/local addresses not allowed' });
+    return;
+  }
+  try {
+    const analysisData = await generateGrowthAnalysis(url, Number(radius), city || '', state || '');
+    const report = await prisma.report.create({
+      data: {
+        userId: req.userId!,
+        url,
+        urlHash: hashUrl(url),
+        radiusMi: Number(radius),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        reportData: analysisData as any,
+        paidAmount: 0,
+        reportType: 'growth',
+        city: city || null,
+        state: state || null,
+      },
+    });
+    res.json({
+      id: report.id,
+      url: report.url,
+      radius: report.radiusMi,
+      at: report.createdAt,
+      data: report.reportData,
+      reportType: report.reportType,
+      city: report.city,
+      state: report.state,
+    });
+  } catch (err) {
+    console.error('Admin generate-growth error:', err);
+    res.status(500).json({ error: 'Failed to generate growth report' });
   }
 });
 
@@ -136,6 +186,9 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res: Response): Promise
       radius: report.radiusMi,
       at: report.createdAt,
       data: report.reportData,
+      reportType: report.reportType,
+      city: report.city,
+      state: report.state,
     });
   } catch {
     res.status(500).json({ error: 'Failed to fetch report' });

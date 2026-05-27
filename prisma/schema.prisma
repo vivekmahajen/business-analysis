@@ -31,6 +31,9 @@ model Report {
   paidAmount Int      @default(9900) @map("paid_amount")
   stripePi   String?  @map("stripe_pi") @db.VarChar(255)
   createdAt  DateTime @default(now()) @map("created_at")
+  reportType String   @default("competitive") @map("report_type") @db.VarChar(20)
+  city       String?  @db.VarChar(100)
+  state      String?  @db.VarChar(100)
   user       User     @relation(fields: [userId], references: [id])
 
   @@index([userId, urlHash], name: "idx_reports_user_url")
