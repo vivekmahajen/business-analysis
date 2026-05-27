@@ -96,6 +96,9 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
+  const rawScore = (data as unknown as { overallScore?: unknown }).overallScore;
+  const overallScore = Number.isFinite(Number(rawScore)) ? Math.round(Number(rawScore)) : null;
+
   const handleDownload = () => {
     const html = generateHtmlReport(data, url, generatedAt);
     const blob = new Blob([html], { type: 'text/html' });
@@ -120,7 +123,9 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="text-center min-w-[72px]">
-                <div className={`font-syne font-black text-5xl ${scoreColor(data.overallScore)}`}>{data.overallScore}</div>
+                <div className={`font-syne font-black text-5xl ${overallScore !== null ? scoreColor(overallScore) : 'text-white/50'}`}>
+                  {overallScore ?? '—'}
+                </div>
                 <div className="text-blue-300 text-xs mt-1">Overall Score</div>
                 <div className="mt-2 px-3 py-1 bg-white/10 rounded-full text-xs whitespace-nowrap">{data.marketPosition}</div>
               </div>
@@ -148,20 +153,23 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
               { label: 'Digital Presence', score: data.digitalScore, findings: data.digitalFindings },
               { label: 'Content', score: data.contentScore, findings: data.contentFindings },
               { label: 'UX / Design', score: data.uxScore, findings: data.uxFindings },
-            ].map(({ label, score, findings }) => (
-              <div key={label} className="bg-white rounded-2xl border border-gray-200 p-5">
-                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{label}</div>
-                <div className={`font-syne font-black text-4xl mb-3 ${scoreColor(score)}`}>{score}</div>
-                <ScoreBar value={score} />
-                <ul className="mt-4 space-y-2">
-                  {(findings || []).map((f, i) => (
-                    <li key={i} className="text-xs text-gray-500 flex gap-1.5 items-start">
-                      <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>{f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            ].map(({ label, score: rawS, findings }) => {
+              const s = Number.isFinite(Number(rawS)) ? Math.round(Number(rawS)) : null;
+              return (
+                <div key={label} className="bg-white rounded-2xl border border-gray-200 p-5">
+                  <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">{label}</div>
+                  <div className={`font-syne font-black text-4xl mb-3 ${s !== null ? scoreColor(s) : 'text-gray-400'}`}>{s ?? '—'}</div>
+                  <ScoreBar value={s ?? 0} />
+                  <ul className="mt-4 space-y-2">
+                    {(findings || []).map((f, i) => (
+                      <li key={i} className="text-xs text-gray-500 flex gap-1.5 items-start">
+                        <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>{f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -197,7 +205,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                       </div>
                     )}
                   </div>
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-syne font-bold text-xl flex-shrink-0 ${scoreBg(c.score)}`}>{c.score}</div>
+                  {(() => { const cs = Number.isFinite(Number(c.score)) ? Math.round(Number(c.score)) : null; return <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-syne font-bold text-xl flex-shrink-0 ${cs !== null ? scoreBg(cs) : 'bg-gray-400'}`}>{cs ?? '—'}</div>; })()}
                 </div>
               </div>
             ))}
@@ -215,8 +223,8 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                     <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{s.category}</span>
                   </div>
                   <p className="text-gray-500 text-sm leading-relaxed mb-3">{s.description}</p>
-                  <ScoreBar value={s.score} />
-                  <div className="text-xs text-gray-400 mt-1">{s.score}/100</div>
+                  <ScoreBar value={Number.isFinite(Number(s.score)) ? Number(s.score) : 0} />
+                  <div className="text-xs text-gray-400 mt-1">{Number.isFinite(Number(s.score)) ? Math.round(Number(s.score)) : '—'}/100</div>
                 </div>
               ))}
             </div>

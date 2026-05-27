@@ -52,8 +52,11 @@ export default function DashboardScreen({
 
   const getEntryScore = (entry: AnalysisEntry): number | null => {
     if (entry.reportType === 'growth') return null;
-    const d = entry.data as { overallScore?: number };
-    return typeof d.overallScore === 'number' ? d.overallScore : null;
+    const d = entry.data as { overallScore?: unknown };
+    const raw = d.overallScore;
+    if (raw === undefined || raw === null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? Math.round(n) : null;
   };
 
   const getEntryName = (entry: AnalysisEntry): string => {

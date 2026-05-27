@@ -34,6 +34,8 @@ function CompetitivePreview({ data }: { data: AnalysisData }) {
   const summary = data.executiveSummary
     ? data.executiveSummary.split('.').slice(0, 2).join('.') + '.'
     : '';
+  const rawScore = (data as unknown as { overallScore?: unknown }).overallScore;
+  const overallScore = Number.isFinite(Number(rawScore)) ? Math.round(Number(rawScore)) : null;
 
   return (
     <div className="space-y-6">
@@ -41,8 +43,8 @@ function CompetitivePreview({ data }: { data: AnalysisData }) {
       <div className="flex items-center gap-6 bg-gradient-to-r from-blue-900 to-blue-700 text-white rounded-2xl p-6">
         <div>
           <div className="text-blue-300 text-xs uppercase tracking-widest mb-1">Overall Score</div>
-          <div className={`font-syne font-black text-5xl ${scoreColor(data.overallScore)}`}>
-            {data.overallScore}
+          <div className={`font-syne font-black text-5xl ${overallScore !== null ? scoreColor(overallScore) : 'text-white/50'}`}>
+            {overallScore ?? '—'}
           </div>
           <div className="text-blue-200 text-sm mt-1">{data.marketPosition}</div>
         </div>
@@ -64,15 +66,18 @@ function CompetitivePreview({ data }: { data: AnalysisData }) {
             { label: 'Digital', score: data.digitalScore },
             { label: 'Content', score: data.contentScore },
             { label: 'UX', score: data.uxScore },
-          ].map(({ label, score }) => (
-            <div key={label} className="bg-white border border-gray-200 rounded-xl p-3 text-center">
-              <div className="text-xs text-gray-400 mb-1">{label}</div>
-              <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>{score}</div>
-              <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${scoreBg(score)}`} style={{ width: `${score}%` }} />
+          ].map(({ label, score: rawS }) => {
+            const s = Number.isFinite(Number(rawS)) ? Math.round(Number(rawS)) : null;
+            return (
+              <div key={label} className="bg-white border border-gray-200 rounded-xl p-3 text-center">
+                <div className="text-xs text-gray-400 mb-1">{label}</div>
+                <div className={`font-syne font-bold text-2xl ${s !== null ? scoreColor(s) : 'text-gray-400'}`}>{s ?? '—'}</div>
+                <div className="mt-2 h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${s !== null ? scoreBg(s) : 'bg-gray-300'}`} style={{ width: `${s ?? 0}%` }} />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
