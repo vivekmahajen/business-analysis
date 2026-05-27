@@ -80,7 +80,6 @@ function CompetitivePreviewPanel() {
   const d = SAMPLE_COMPETITIVE;
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="bg-gradient-to-r from-blue-900/80 to-blue-700/80 border border-blue-500/30 rounded-2xl p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -99,7 +98,6 @@ function CompetitivePreviewPanel() {
         </div>
       </div>
 
-      {/* Scores */}
       <div className="grid grid-cols-4 gap-2">
         <SampleScoreCard label="SEO" score={d.seoScore} />
         <SampleScoreCard label="Digital" score={d.digitalScore} />
@@ -107,7 +105,6 @@ function CompetitivePreviewPanel() {
         <SampleScoreCard label="UX" score={d.uxScore} />
       </div>
 
-      {/* Competitors */}
       <div>
         <div className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-2">Competitors Found</div>
         <div className="space-y-2">
@@ -129,7 +126,6 @@ function CompetitivePreviewPanel() {
         </div>
       </div>
 
-      {/* Competitor opportunities */}
       <div>
         <div className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-2">Competitor-Inspired Opportunities</div>
         <div className="space-y-2">
@@ -145,7 +141,6 @@ function CompetitivePreviewPanel() {
         </div>
       </div>
 
-      {/* Locked */}
       <div className="space-y-2">
         <Locked label={`${d.weaknessCount} weaknesses identified with impact ratings`} />
         <Locked label={`${d.gapCount} competitive gaps with priority rankings`} />
@@ -159,7 +154,6 @@ function GrowthPreviewPanel() {
   const d = SAMPLE_GROWTH;
   return (
     <div className="space-y-5">
-      {/* Header */}
       <div className="bg-gradient-to-r from-emerald-900/80 to-teal-700/80 border border-emerald-500/30 rounded-2xl p-5">
         <div className="text-emerald-300 text-xs uppercase tracking-widest mb-1">Sales Growth Advisor</div>
         <div className="font-syne font-bold text-xl text-white">{d.businessName}</div>
@@ -175,7 +169,6 @@ function GrowthPreviewPanel() {
         </div>
       </div>
 
-      {/* Opportunities */}
       <div>
         <div className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-2">
           Growth Opportunities ({d.opportunities.length} identified)
@@ -196,7 +189,6 @@ function GrowthPreviewPanel() {
         </div>
       </div>
 
-      {/* Locked */}
       <div className="space-y-2">
         <Locked label={`${d.competitorCount} competitors analyzed — products, tactics & channels`} />
         <Locked label="90-Day action roadmap across 3 phases" />
@@ -212,20 +204,15 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white">
-      {/* Nav */}
       <nav className="flex justify-between items-center px-8 py-5 max-w-7xl mx-auto">
         <div className="font-syne font-bold text-xl tracking-tight">
           SiteAnalyzer <span className="text-blue-300">Pro</span>
         </div>
-        <button
-          onClick={onLogin}
-          className="text-sm text-blue-200 hover:text-white transition-colors"
-        >
+        <button onClick={onLogin} className="text-sm text-blue-200 hover:text-white transition-colors">
           Sign in
         </button>
       </nav>
 
-      {/* Hero */}
       <div className="max-w-4xl mx-auto px-8 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-blue-800/50 border border-blue-600/30 rounded-full px-4 py-2 text-sm text-blue-200 mb-8">
           <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
@@ -271,7 +258,6 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
           <p className="text-blue-300 text-sm">Real report structure — sample data shown below</p>
         </div>
 
-        {/* Tab toggle */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex rounded-xl border border-white/20 overflow-hidden">
             <button
@@ -310,12 +296,9 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
         </div>
       </div>
 
-      {/* Features */}
       <div className="bg-white/5 border-t border-white/10 py-20">
         <div className="max-w-6xl mx-auto px-8">
-          <h2 className="font-syne font-bold text-2xl text-center mb-12 text-white">
-            What's in every report
-          </h2>
+          <h2 className="font-syne font-bold text-2xl text-center mb-12 text-white">What's in every report</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               { icon: '🔍', title: 'Deep Competitor Research', desc: '4–5 real local competitors found and analyzed with live web search.' },
@@ -335,7 +318,6 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="text-center py-20">
         <h2 className="font-syne font-bold text-3xl mb-4">Ready to outpace your competition?</h2>
         <p className="text-blue-200 mb-8">Get your full competitive intelligence report in minutes.</p>

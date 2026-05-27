@@ -35,8 +35,6 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
     setLoading(true);
 
     try {
-      // In production: use Stripe.js to tokenize card
-      // For demo: create intent then simulate confirmation
       let intentResult: { clientSecret: string; publishableKey: string };
       if (reportType === 'growth') {
         intentResult = await api.createGrowthPaymentIntent(url, radius, city || '', state || '');
@@ -44,11 +42,6 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
         intentResult = await api.createPaymentIntent(url, radius);
       }
 
-      // Production flow would be:
-      // const stripe = await loadStripe(intentResult.publishableKey);
-      // const { paymentIntent } = await stripe.confirmCardPayment(intentResult.clientSecret, { ... });
-
-      // Demo: extract PaymentIntent ID from clientSecret
       const paymentIntentId = intentResult.clientSecret.split('_secret_')[0];
       onSuccess(paymentIntentId);
     } catch (e) {
@@ -72,7 +65,6 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
         </button>
 
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Order Summary */}
           <div className={`${headerClass} p-6 text-white`}>
             <div className="text-sm text-white/70 mb-1">{reportLabel}</div>
             <div className="font-syne font-bold text-2xl">$99.00</div>
@@ -82,7 +74,6 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
             </div>
           </div>
 
-          {/* Payment Form */}
           <div className="p-8">
             <h2 className="font-syne font-bold text-xl text-gray-900 mb-6">Payment Details</h2>
 
