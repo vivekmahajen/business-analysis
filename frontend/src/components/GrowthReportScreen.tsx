@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GrowthAdvisorData, GrowthOpportunity, GrowthProvider } from '../types';
+import { generateGrowthHtmlReport } from '../utils/htmlExportGrowth';
 
 interface Props {
   data: GrowthAdvisorData;
@@ -168,9 +169,29 @@ function OpportunityCard({ opp, rank }: { opp: GrowthOpportunity; rank: number }
   );
 }
 
+const DISCLAIMER = 'This report is provided for informational purposes only and does not constitute legal, financial, or professional advice. SiteAnalyzer Pro is not responsible for any business decisions made based on the information contained in this report.';
+
+function Disclaimer() {
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-xs text-amber-800 leading-relaxed">
+      <strong className="font-semibold">Disclaimer:</strong> {DISCLAIMER}
+    </div>
+  );
+}
+
 export default function GrowthReportScreen({ data, url, generatedAt, onBack }: Props) {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  const handleDownload = () => {
+    const html = generateGrowthHtmlReport(data, url, generatedAt);
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${data.businessName.replace(/[^a-zA-Z0-9]/g, '-')}-growth-advisor.html`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   const sortedOpportunities = [...(data.opportunities || [])].sort((a, b) => a.priority - b.priority);
 
@@ -212,6 +233,12 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
                 </div>
                 <div className="text-emerald-300 text-xs mt-0.5">estimated monthly range</div>
               </div>
+              <button
+                onClick={handleDownload}
+                className="bg-white text-emerald-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2"
+              >
+                ⬇ Download HTML
+              </button>
             </div>
           </div>
 
@@ -228,6 +255,8 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+
+        <Disclaimer />
 
         {/* Business Overview */}
         <section>
@@ -396,6 +425,8 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
             </div>
           </section>
         )}
+
+        <Disclaimer />
 
         {/* Footer */}
         <div className="text-center py-8 border-t border-gray-200 text-gray-400 text-sm">

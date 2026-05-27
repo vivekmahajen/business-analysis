@@ -87,6 +87,16 @@ function SectionHeader({ title }: { title: string }) {
   );
 }
 
+const DISCLAIMER = 'This report is provided for informational purposes only and does not constitute legal, financial, or professional advice. SiteAnalyzer Pro is not responsible for any business decisions made based on the information contained in this report.';
+
+function Disclaimer() {
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 text-xs text-amber-800 leading-relaxed">
+      <strong className="font-semibold">Disclaimer:</strong> {DISCLAIMER}
+    </div>
+  );
+}
+
 export default function ReportScreen({ data, url, generatedAt, onBack }: Props) {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
@@ -145,6 +155,8 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
+
+        <Disclaimer />
 
         {/* Executive Summary */}
         <section>
@@ -407,6 +419,8 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
             ))}
           </div>
         </section>
+
+        <Disclaimer />
 
         {/* Footer */}
         <div className="text-center py-8 border-t border-gray-200 text-gray-400 text-sm">
