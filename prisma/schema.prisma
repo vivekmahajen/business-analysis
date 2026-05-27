@@ -74,3 +74,45 @@ model Payment {
 
   @@map("payments")
 }
+
+model AdminLead {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessName       String    @map("business_name")
+  category           String
+  subCategory        String?   @map("sub_category")
+  rating             Float
+  reviewCount        Int       @map("review_count")
+  ratingTrend        String    @map("rating_trend")
+  reviewResponseRate String?   @map("review_response_rate")
+  primarySource      String    @map("primary_source")
+  address            String?
+  city               String
+  state              String
+  zipCode            String?   @map("zip_code")
+  phone              String?
+  website            String?
+  email              String?
+  ownerName          String?   @map("owner_name")
+  contactFound       Boolean   @default(false) @map("contact_found")
+  hasOnlineOrdering  Boolean?  @map("has_online_ordering")
+  hasSocialMedia     Boolean?  @map("has_social_media")
+  lastReviewDate     String?   @map("last_review_date")
+  conversionScore    Int       @default(0) @map("conversion_score")
+  competitors        Json?
+  teaserFindings     Json?     @map("teaser_findings")
+  fullFindings       Json?     @map("full_findings")
+  teaserReport       Json?     @map("teaser_report")
+  status             String    @default("discovered")
+  teaserSentAt       DateTime? @map("teaser_sent_at")
+  teaserClickedAt    DateTime? @map("teaser_clicked_at")
+  convertedAt        DateTime? @map("converted_at")
+  discoveredAt       DateTime  @default(now()) @map("discovered_at")
+  discoveredBy       String?   @map("discovered_by") @db.Uuid
+
+  @@index([category])
+  @@index([category, state])
+  @@index([category, state, city])
+  @@index([status])
+  @@index([conversionScore])
+  @@map("admin_leads")
+}

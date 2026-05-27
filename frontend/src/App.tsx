@@ -10,6 +10,7 @@ import PaymentScreen from './components/PaymentScreen';
 import GeneratingScreen from './components/GeneratingScreen';
 import ReportScreen from './components/ReportScreen';
 import GrowthReportScreen from './components/GrowthReportScreen';
+import AdminLeadDiscoveryScreen from './components/AdminLeadDiscoveryScreen';
 
 function AppInner() {
   const [screen, setScreen] = useState<Screen>('landing');
@@ -243,10 +244,15 @@ function AppInner() {
         onViewReport={viewReport}
         onDeleteReport={deleteReport}
         onLogout={handleLogout}
+        onAdminLeads={user?.isAdmin ? () => setScreen('admin-leads') : undefined}
         error={error}
         setError={setError}
       />
     );
+  }
+
+  if (screen === 'admin-leads') {
+    return <AdminLeadDiscoveryScreen onBack={() => setScreen('dashboard')} />;
   }
 
   if (screen === 'found') {

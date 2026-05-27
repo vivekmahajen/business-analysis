@@ -77,4 +77,51 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, radius, city, state, reportType: 'growth' }),
     }),
+
+  // Admin Lead Discovery
+  adminDiscover: (params: {
+    category: string; state: string; city: string;
+    ratingCeiling?: number; minReviews?: number; maxResults?: number; forceRefresh?: boolean;
+  }) =>
+    request<import('../types').LeadDiscoveryResult>('/admin/discover', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  adminGetLeads: (filters?: {
+    category?: string; state?: string; city?: string; status?: string;
+    sort?: string; page?: number; limit?: number;
+  }) => {
+    const qs = new URLSearchParams();
+    if (filters?.category) qs.set('category', filters.category);
+    if (filters?.state) qs.set('state', filters.state);
+    if (filters?.city) qs.set('city', filters.city);
+    if (filters?.status) qs.set('status', filters.status);
+    if (filters?.sort) qs.set('sort', filters.sort);
+    if (filters?.page) qs.set('page', String(filters.page));
+    if (filters?.limit) qs.set('limit', String(filters.limit));
+    const q = qs.toString();
+    return request<import('../types').LeadDiscoveryResult & { total: number; page: number }>(`/admin/leads${q ? '?' + q : ''}`);
+  },
+
+  adminGetLead: (id: string) =>
+    request<import('../types').AdminLead>(`/admin/leads/${id}`),
+
+  adminUpdateLeadStatus: (id: string, status: string) =>
+    request<import('../types').AdminLead>(`/admin/leads/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  adminDeleteLead: (id: string) =>
+    request<{ message: string }>(`/admin/leads/${id}`, { method: 'DELETE' }),
+
+  adminGetCategories: () =>
+    request<string[]>('/admin/categories'),
+
+  adminGetStates: (category: string) =>
+    request<string[]>(`/admin/states/${encodeURIComponent(category)}`),
+
+  adminGetCities: (category: string, state: string) =>
+    request<string[]>(`/admin/cities/${encodeURIComponent(category)}/${encodeURIComponent(state)}`),
 };

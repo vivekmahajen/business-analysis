@@ -15,6 +15,7 @@ interface Props {
   onViewReport: (entry: AnalysisEntry) => void;
   onDeleteReport: (id: string) => void;
   onLogout: () => void;
+  onAdminLeads?: () => void;
   error: string;
   setError: (e: string) => void;
 }
@@ -23,7 +24,7 @@ const RADII = [1, 5, 10, 25, 50, 100];
 
 export default function DashboardScreen({
   user, isAdmin, saved, urlInput, setUrlInput, radius, setRadius,
-  onSubmit, onViewReport, onDeleteReport, onLogout, error, setError,
+  onSubmit, onViewReport, onDeleteReport, onLogout, onAdminLeads, error, setError,
 }: Props) {
   const [checking, setChecking] = useState(false);
   const [reportType, setReportType] = useState<'competitive' | 'growth'>('competitive');
@@ -80,6 +81,14 @@ export default function DashboardScreen({
               </span>
             )}
             <LanguagePicker variant="minimal" className="!bg-gray-100 !border-gray-200 !text-gray-600 hover:!bg-gray-200 hover:!text-gray-900" />
+            {isAdmin && onAdminLeads && (
+              <button
+                onClick={onAdminLeads}
+                className="bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+              >
+                Lead Discovery
+              </button>
+            )}
             <button
               onClick={onLogout}
               className="text-sm text-gray-500 hover:text-gray-900 transition-colors"

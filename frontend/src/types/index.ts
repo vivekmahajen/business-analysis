@@ -164,5 +164,88 @@ export interface GrowthAdvisorData {
   topQuickWin: string;
 }
 
-export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report';
+export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads';
 export type AuthMode = 'login' | 'register';
+
+// Admin Lead Discovery types
+
+export interface LeadCompetitor {
+  name: string;
+  rating: number;
+  reviewCount: number;
+  keyAdvantage: string;
+}
+
+export interface TeaserFinding {
+  code: string;
+  title: string;
+  finding: string;
+}
+
+export interface FullFinding {
+  code: string;
+  title: string;
+  finding: string;
+  category: string;
+  estimatedImpact: string;
+}
+
+export interface TeaserReport {
+  emailSubject: string;
+  emailSubjectVariant: string;
+  openingHook: string;
+  ctaHeadline: string;
+  ctaBody: string;
+  ctaButtonText: string;
+  ctaUrl: string;
+  footerText: string;
+}
+
+export interface AdminLead {
+  id: string;
+  businessName: string;
+  category: string;
+  subCategory: string | null;
+  rating: number;
+  reviewCount: number;
+  ratingTrend: 'declining' | 'flat' | 'improving';
+  reviewResponseRate: string | null;
+  primarySource: string;
+  address: string | null;
+  city: string;
+  state: string;
+  zipCode: string | null;
+  phone: string | null;
+  website: string | null;
+  email: string | null;
+  ownerName: string | null;
+  contactFound: boolean;
+  hasOnlineOrdering: boolean | null;
+  hasSocialMedia: boolean | null;
+  lastReviewDate: string | null;
+  conversionScore: number;
+  competitors: LeadCompetitor[] | null;
+  teaserFindings: TeaserFinding[] | null;
+  fullFindings: FullFinding[] | null;
+  teaserReport: TeaserReport | null;
+  status: 'discovered' | 'emailed' | 'clicked' | 'signed_up' | 'converted';
+  teaserSentAt: string | null;
+  teaserClickedAt: string | null;
+  convertedAt: string | null;
+  discoveredAt: string;
+}
+
+export interface LeadDiscoveryResult {
+  cached: boolean;
+  totalFound: number;
+  leads: AdminLead[];
+  queryMeta?: {
+    category: string;
+    state: string;
+    city: string;
+    totalFound: number;
+    contactFoundCount: number;
+    avgRating: number;
+    generatedAt: string;
+  };
+}

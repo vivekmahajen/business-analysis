@@ -6,6 +6,7 @@ import path from 'path';
 import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
+import adminRouter from './routes/admin';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -37,7 +38,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments');
+app.use('/api/admin', adminRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
