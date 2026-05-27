@@ -1,5 +1,7 @@
 const API_BASE = (import.meta.env.VITE_API_URL as string) || '/api';
 
+console.log('[SiteAnalyzer] API base:', API_BASE);
+
 function getToken(): string | null {
   return localStorage.getItem('sap_token');
 }
@@ -12,7 +14,13 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const url = `${API_BASE}${path}`;
+  let res: Response;
+  try {
+    res = await fetch(url, { ...options, headers });
+  } catch (err) {
+    throw new Error(`Cannot reach API at ${url} — check VITE_API_URL and Railway status`);
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
