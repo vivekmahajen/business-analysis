@@ -65,4 +65,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, radius }),
     }),
+
+  generateGrowthReportAdmin: (url: string, radius: number, city: string, state: string) =>
+    request<unknown>('/reports/generate-growth', {
+      method: 'POST',
+      body: JSON.stringify({ url, radius, city, state }),
+    }),
+
+  createGrowthPaymentIntent: (url: string, radius: number, city: string, state: string) =>
+    request<{ clientSecret: string; publishableKey: string }>('/payments/intent', {
+      method: 'POST',
+      body: JSON.stringify({ url, radius, city, state, reportType: 'growth' }),
+    }),
 };

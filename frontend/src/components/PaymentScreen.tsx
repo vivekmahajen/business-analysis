@@ -4,13 +4,16 @@ import { api } from '../utils/api';
 interface Props {
   url: string;
   radius: number;
+  reportType?: 'competitive' | 'growth';
+  city?: string;
+  state?: string;
   onSuccess: (paymentIntentId: string) => void;
   onBack: () => void;
   error: string;
   setError: (e: string) => void;
 }
 
-export default function PaymentScreen({ url, radius, onSuccess, onBack, error, setError }: Props) {
+export default function PaymentScreen({ url, radius, reportType = 'competitive', city, state, onSuccess, onBack, error, setError }: Props) {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
@@ -34,7 +37,12 @@ export default function PaymentScreen({ url, radius, onSuccess, onBack, error, s
     try {
       // In production: use Stripe.js to tokenize card
       // For demo: create intent then simulate confirmation
-      const intentResult = await api.createPaymentIntent(url, radius);
+      let intentResult: { clientSecret: string; publishableKey: string };
+      if (reportType === 'growth') {
+        intentResult = await api.createGrowthPaymentIntent(url, radius, city || '', state || '');
+      } else {
+        intentResult = await api.createPaymentIntent(url, radius);
+      }
 
       // Production flow would be:
       // const stripe = await loadStripe(intentResult.publishableKey);
@@ -50,6 +58,9 @@ export default function PaymentScreen({ url, radius, onSuccess, onBack, error, s
     }
   };
 
+  const reportLabel = reportType === 'growth' ? 'Sales Growth Advisor' : 'Competitive Analysis Report';
+  const headerClass = reportType === 'growth' ? 'bg-emerald-700' : 'bg-blue-600';
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
@@ -62,11 +73,12 @@ export default function PaymentScreen({ url, radius, onSuccess, onBack, error, s
 
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           {/* Order Summary */}
-          <div className="bg-blue-600 p-6 text-white">
-            <div className="text-sm text-blue-200 mb-1">Competitive Analysis Report</div>
+          <div className={`${headerClass} p-6 text-white`}>
+            <div className="text-sm text-white/70 mb-1">{reportLabel}</div>
             <div className="font-syne font-bold text-2xl">$99.00</div>
-            <div className="text-sm text-blue-200 mt-2 break-all">
+            <div className="text-sm text-white/70 mt-2 break-all">
               {url} · {radius} mile radius
+              {reportType === 'growth' && city && ` · ${city}${state ? `, ${state}` : ''}`}
             </div>
           </div>
 

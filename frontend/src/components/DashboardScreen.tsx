@@ -9,7 +9,7 @@ interface Props {
   setUrlInput: (v: string) => void;
   radius: number;
   setRadius: (v: number) => void;
-  onSubmit: (url: string, radius: number) => void;
+  onSubmit: (url: string, radius: number, reportType: 'competitive' | 'growth', city?: string, state?: string) => void;
   onViewReport: (entry: AnalysisEntry) => void;
   onDeleteReport: (id: string) => void;
   onLogout: () => void;
@@ -24,6 +24,9 @@ export default function DashboardScreen({
   onSubmit, onViewReport, onDeleteReport, onLogout, error, setError,
 }: Props) {
   const [checking, setChecking] = useState(false);
+  const [reportType, setReportType] = useState<'competitive' | 'growth'>('competitive');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +36,7 @@ export default function DashboardScreen({
     setError('');
     setChecking(true);
     try {
-      await onSubmit(url, radius);
+      await onSubmit(url, radius, reportType, city || undefined, state || undefined);
     } finally {
       setChecking(false);
     }
@@ -43,6 +46,17 @@ export default function DashboardScreen({
     new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
+
+  const getEntryScore = (entry: AnalysisEntry): number | null => {
+    if (entry.reportType === 'growth') return null;
+    const d = entry.data as { overallScore?: number };
+    return typeof d.overallScore === 'number' ? d.overallScore : null;
+  };
+
+  const getEntryName = (entry: AnalysisEntry): string => {
+    const d = entry.data as { businessName?: string };
+    return d.businessName || entry.url;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -79,6 +93,34 @@ export default function DashboardScreen({
             Enter any business website URL and select a competitor search radius.
           </p>
 
+          {/* Report Type Toggle */}
+          <div className="mb-5">
+            <div className="inline-flex rounded-xl border border-gray-200 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setReportType('competitive')}
+                className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                  reportType === 'competitive'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                Competitive Analysis
+              </button>
+              <button
+                type="button"
+                onClick={() => setReportType('growth')}
+                className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                  reportType === 'growth'
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                Sales Growth Advisor
+              </button>
+            </div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
@@ -105,14 +147,43 @@ export default function DashboardScreen({
                 type="submit"
                 disabled={checking}
                 className={`font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap text-white disabled:opacity-60 ${
-                  isAdmin
-                    ? 'bg-amber-500 hover:bg-amber-600'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                  reportType === 'growth'
+                    ? isAdmin
+                      ? 'bg-emerald-500 hover:bg-emerald-600'
+                      : 'bg-emerald-600 hover:bg-emerald-700'
+                    : isAdmin
+                      ? 'bg-amber-500 hover:bg-amber-600'
+                      : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
-                {checking ? 'Checking…' : isAdmin ? 'Analyze — Free' : 'Analyze — $99'}
+                {checking
+                  ? 'Checking…'
+                  : reportType === 'growth'
+                    ? isAdmin ? 'Growth Advisor — Free' : 'Growth Advisor — $99'
+                    : isAdmin ? 'Competitive — Free' : 'Competitive — $99'
+                }
               </button>
             </div>
+
+            {/* City & State inputs for Growth Advisor */}
+            {reportType === 'growth' && (
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  value={city}
+                  onChange={e => setCity(e.target.value)}
+                  placeholder="City"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+                <input
+                  type="text"
+                  value={state}
+                  onChange={e => setState(e.target.value)}
+                  placeholder="State"
+                  className="sm:w-36 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
@@ -141,45 +212,64 @@ export default function DashboardScreen({
             </div>
           ) : (
             <div className="space-y-3">
-              {saved.map(entry => (
-                <div
-                  key={entry.id}
-                  className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-gray-900 truncate">{entry.data.businessName}</div>
-                    <div className="text-sm text-gray-400 truncate">{entry.url}</div>
-                    <div className="text-xs text-gray-400 mt-1">
-                      {formatDate(entry.at)} · {entry.radius} mile radius
+              {saved.map(entry => {
+                const score = getEntryScore(entry);
+                const isGrowth = entry.reportType === 'growth';
+                return (
+                  <div
+                    key={entry.id}
+                    className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between gap-4 hover:shadow-sm transition-shadow"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-gray-900 truncate">{getEntryName(entry)}</div>
+                        {isGrowth && (
+                          <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                            Growth
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-gray-400 truncate">{entry.url}</div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {formatDate(entry.at)} · {entry.radius} mile radius
+                        {isGrowth && entry.city && ` · ${entry.city}${entry.state ? `, ${entry.state}` : ''}`}
+                      </div>
+                    </div>
+
+                    {score !== null ? (
+                      <div className="text-right flex-shrink-0">
+                        <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>
+                          {score}
+                        </div>
+                        <div className="text-xs text-gray-400">score</div>
+                      </div>
+                    ) : (
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-syne font-bold text-sm text-emerald-600">Growth</div>
+                        <div className="text-xs text-gray-400">Advisor</div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => onViewReport(entry)}
+                        className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm('Delete this report?')) onDeleteReport(entry.id);
+                        }}
+                        className="text-gray-400 hover:text-red-500 px-2 py-2 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        ×
+                      </button>
                     </div>
                   </div>
-
-                  <div className="text-right flex-shrink-0">
-                    <div className={`font-syne font-bold text-2xl ${scoreColor(entry.data.overallScore)}`}>
-                      {entry.data.overallScore}
-                    </div>
-                    <div className="text-xs text-gray-400">score</div>
-                  </div>
-
-                  <div className="flex gap-2 flex-shrink-0">
-                    <button
-                      onClick={() => onViewReport(entry)}
-                      className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Delete this report?')) onDeleteReport(entry.id);
-                      }}
-                      className="text-gray-400 hover:text-red-500 px-2 py-2 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      ×
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

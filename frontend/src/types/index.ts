@@ -74,6 +74,80 @@ export interface AnalysisEntry {
   radius: number;
   at: string;
   data: AnalysisData;
+  reportType?: 'competitive' | 'growth';
+  city?: string;
+  state?: string;
+}
+
+// Growth Advisor types
+
+export interface GrowthCompetitor {
+  name: string;
+  url: string;
+  distance: string;
+  strengthsOverTarget: string[];
+  uniqueProducts: string[];
+  salesChannels: string[];
+  pricingNotes: string;
+  loyaltyOrPromos: string;
+}
+
+export interface TrendSignal {
+  trend: string;
+  relevance: string;
+  urgency: 'Immediate' | 'Seasonal' | 'Ongoing';
+}
+
+export interface GrowthProvider {
+  providerName: string;
+  providerType: string;
+  serviceDescription: string;
+  estimatedCost: string;
+  website: string;
+  proximityNote: string;
+}
+
+export interface GrowthOpportunity {
+  priority: number;
+  opportunityTitle: string;
+  category: 'A' | 'B' | 'C' | 'D' | 'E';
+  description: string;
+  competitorEvidence: string;
+  trendSignal: string;
+  estimatedMonthlyRevenueImpact: string;
+  implementationEffort: 'Low' | 'Medium' | 'High';
+  timeToRevenue: string;
+  implementationSteps: string[];
+  providers: GrowthProvider[];
+}
+
+export interface RoadmapAction {
+  opportunityTitle: string;
+  firstStep: string;
+}
+
+export interface RoadmapMonth {
+  theme: string;
+  actions: RoadmapAction[];
+}
+
+export interface GrowthAdvisorData {
+  businessName: string;
+  businessType: string;
+  location: string;
+  currentProducts: string[];
+  currentChannels: string[];
+  currentPricing: string;
+  competitors: GrowthCompetitor[];
+  trendSignals: TrendSignal[];
+  opportunities: GrowthOpportunity[];
+  roadmap: {
+    month1: RoadmapMonth;
+    month2: RoadmapMonth;
+    month3: RoadmapMonth;
+  };
+  totalEstimatedMonthlyRevenueRange: string;
+  topQuickWin: string;
 }
 
 export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, AnalysisData, AnalysisEntry, Screen, AuthMode } from './types';
+import { User, AnalysisData, GrowthAdvisorData, AnalysisEntry, Screen, AuthMode } from './types';
 import { api } from './utils/api';
 import LandingScreen from './components/LandingScreen';
 import AuthScreen from './components/AuthScreen';
@@ -8,6 +8,7 @@ import FoundScreen from './components/FoundScreen';
 import PaymentScreen from './components/PaymentScreen';
 import GeneratingScreen from './components/GeneratingScreen';
 import ReportScreen from './components/ReportScreen';
+import GrowthReportScreen from './components/GrowthReportScreen';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
@@ -16,13 +17,17 @@ export default function App() {
   const [urlInput, setUrlInput] = useState('');
   const [radius, setRadius] = useState(25);
   const [report, setReport] = useState<AnalysisData | null>(null);
-  const [reportMeta, setReportMeta] = useState<{ id: string; url: string; at: string } | null>(null);
+  const [growthReport, setGrowthReport] = useState<GrowthAdvisorData | null>(null);
+  const [reportMeta, setReportMeta] = useState<{ id: string; url: string; at: string; reportType?: 'competitive' | 'growth' } | null>(null);
   const [saved, setSaved] = useState<AnalysisEntry[]>([]);
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<number[]>([]);
   const [foundRep, setFoundRep] = useState<AnalysisEntry | null>(null);
   const [pendUrl, setPendUrl] = useState('');
   const [pendRad, setPendRad] = useState(25);
+  const [pendReportType, setPendReportType] = useState<'competitive' | 'growth'>('competitive');
+  const [pendCity, setPendCity] = useState('');
+  const [pendState, setPendState] = useState('');
   const [error, setError] = useState('');
 
   // Restore session from localStorage
@@ -66,12 +71,22 @@ export default function App() {
     localStorage.removeItem('sap_user');
     setUser(null);
     setReport(null);
+    setGrowthReport(null);
     setSaved([]);
     setScreen('landing');
   }, []);
 
-  const handleUrlSubmit = useCallback(async (url: string, rad: number) => {
+  const handleUrlSubmit = useCallback(async (
+    url: string,
+    rad: number,
+    reportType: 'competitive' | 'growth',
+    city?: string,
+    state?: string,
+  ) => {
     setError('');
+    setPendReportType(reportType);
+    setPendCity(city || '');
+    setPendState(state || '');
     try {
       const result = await api.checkReport(url) as { found: boolean; report?: AnalysisEntry };
       if (result.found && result.report) {
@@ -84,7 +99,7 @@ export default function App() {
         setPendRad(rad);
         // Admins skip payment entirely
         if (user?.isAdmin) {
-          startGeneration(url, rad);
+          startGeneration(url, rad, undefined, reportType, city || '', state || '');
         } else {
           setScreen('payment');
         }
@@ -92,9 +107,21 @@ export default function App() {
     } catch (e) {
       setError((e as Error).message);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  const startGeneration = useCallback(async (url: string, rad: number, paymentIntentId?: string) => {
+  const startGeneration = useCallback(async (
+    url: string,
+    rad: number,
+    paymentIntentId?: string,
+    reportType?: 'competitive' | 'growth',
+    city?: string,
+    state?: string,
+  ) => {
+    const effectiveReportType = reportType || pendReportType;
+    const effectiveCity = city !== undefined ? city : pendCity;
+    const effectiveState = state !== undefined ? state : pendState;
+
     setScreen('gen');
     setStep(0);
     setDone([]);
@@ -114,6 +141,8 @@ export default function App() {
       let entry: AnalysisEntry;
       if (paymentIntentId) {
         entry = await api.confirmPayment(paymentIntentId, url, rad) as AnalysisEntry;
+      } else if (effectiveReportType === 'growth') {
+        entry = await api.generateGrowthReportAdmin(url, rad, effectiveCity, effectiveState) as AnalysisEntry;
       } else {
         entry = await api.generateReportAdmin(url, rad) as AnalysisEntry;
       }
@@ -122,8 +151,20 @@ export default function App() {
       setStep(STEPS - 1);
 
       setTimeout(() => {
-        setReport(entry.data);
-        setReportMeta({ id: entry.id, url: entry.url, at: entry.at });
+        const entryReportType = (entry as AnalysisEntry & { reportType?: string }).reportType as 'competitive' | 'growth' | undefined;
+        if (entryReportType === 'growth') {
+          setGrowthReport(entry.data as unknown as GrowthAdvisorData);
+          setReport(null);
+        } else {
+          setReport(entry.data as AnalysisData);
+          setGrowthReport(null);
+        }
+        setReportMeta({
+          id: entry.id,
+          url: entry.url,
+          at: entry.at,
+          reportType: entryReportType || 'competitive',
+        });
         setScreen('report');
         loadReports();
       }, 500);
@@ -132,15 +173,27 @@ export default function App() {
       setError((e as Error).message);
       setScreen(paymentIntentId ? 'payment' : 'dashboard');
     }
-  }, [loadReports]);
+  }, [loadReports, pendReportType, pendCity, pendState]);
 
   const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
     await startGeneration(pendUrl, pendRad, paymentIntentId);
   }, [pendUrl, pendRad, startGeneration]);
 
   const viewReport = useCallback((entry: AnalysisEntry) => {
-    setReport(entry.data);
-    setReportMeta({ id: entry.id, url: entry.url, at: entry.at });
+    const entryReportType = entry.reportType;
+    if (entryReportType === 'growth') {
+      setGrowthReport(entry.data as unknown as GrowthAdvisorData);
+      setReport(null);
+    } else {
+      setReport(entry.data as AnalysisData);
+      setGrowthReport(null);
+    }
+    setReportMeta({
+      id: entry.id,
+      url: entry.url,
+      at: entry.at,
+      reportType: entryReportType || 'competitive',
+    });
     setScreen('report');
   }, []);
 
@@ -203,7 +256,7 @@ export default function App() {
         onViewFree={() => viewReport(foundRep!)}
         onGenerateNew={() => {
           if (user?.isAdmin) {
-            startGeneration(pendUrl, pendRad);
+            startGeneration(pendUrl, pendRad, undefined, pendReportType, pendCity, pendState);
           } else {
             setScreen('payment');
           }
@@ -218,6 +271,9 @@ export default function App() {
       <PaymentScreen
         url={pendUrl}
         radius={pendRad}
+        reportType={pendReportType}
+        city={pendCity}
+        state={pendState}
         onSuccess={handlePaymentSuccess}
         onBack={() => setScreen('dashboard')}
         error={error}
@@ -231,6 +287,16 @@ export default function App() {
   }
 
   if (screen === 'report') {
+    if (reportMeta?.reportType === 'growth' && growthReport) {
+      return (
+        <GrowthReportScreen
+          data={growthReport}
+          url={reportMeta.url}
+          generatedAt={reportMeta.at}
+          onBack={() => setScreen('dashboard')}
+        />
+      );
+    }
     return (
       <ReportScreen
         data={report!}
