@@ -145,24 +145,30 @@ export async function generateAnalysis(url: string, radius: number): Promise<Rec
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 8000,
+    max_tokens: 16000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: [{ type: 'web_search_20250305', name: 'web_search' }] as any,
     messages: [{ role: 'user', content: prompt }],
   });
 
+  console.log('[analysis] stop_reason:', response.stop_reason, 'blocks:', response.content.length);
+
   let analysisJson: Record<string, unknown> | null = null;
 
   for (const block of response.content) {
     if (block.type === 'text') {
+      console.log('[analysis] text block length:', block.text.length);
       const match = block.text.match(/\{[\s\S]*\}/);
       if (match) {
         try {
           analysisJson = JSON.parse(match[0]);
           break;
-        } catch {
-          // try next block
+        } catch (parseErr) {
+          console.error('[analysis] JSON parse failed, first 500 chars:', match[0].slice(0, 500));
+          console.error('[analysis] last 200 chars:', match[0].slice(-200));
         }
+      } else {
+        console.error('[analysis] no JSON found in text block, preview:', block.text.slice(0, 300));
       }
     }
   }
