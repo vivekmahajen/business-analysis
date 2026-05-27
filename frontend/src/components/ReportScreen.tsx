@@ -111,20 +111,20 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
-            <div>
+            <div className="flex-1 min-w-0">
               <button onClick={onBack} className="text-blue-300 hover:text-white text-sm mb-3 flex items-center gap-1 transition-colors">← Dashboard</button>
               <div className="text-blue-300 text-xs font-syne uppercase tracking-widest mb-1">SiteAnalyzer Pro</div>
-              <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-2">{data.businessName}</h1>
-              <p className="text-blue-200 text-sm">{data.businessType} · {data.location}</p>
+              <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-2 break-words">{data.businessName}</h1>
+              <p className="text-blue-200 text-sm break-words">{data.businessType} · {data.location}</p>
               <p className="text-blue-300 text-xs mt-2">Generated {formatDate(generatedAt)}</p>
             </div>
             <div className="flex items-center gap-4 flex-shrink-0">
-              <div className="text-center">
+              <div className="text-center min-w-[72px]">
                 <div className={`font-syne font-black text-5xl ${scoreColor(data.overallScore)}`}>{data.overallScore}</div>
                 <div className="text-blue-300 text-xs mt-1">Overall Score</div>
-                <div className="mt-2 px-3 py-1 bg-white/10 rounded-full text-xs">{data.marketPosition}</div>
+                <div className="mt-2 px-3 py-1 bg-white/10 rounded-full text-xs whitespace-nowrap">{data.marketPosition}</div>
               </div>
-              <button onClick={handleDownload} className="bg-white text-blue-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors flex items-center gap-2">
+              <button onClick={handleDownload} className="bg-white text-blue-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors flex items-center gap-2 whitespace-nowrap">
                 ⬇ Download HTML
               </button>
             </div>
