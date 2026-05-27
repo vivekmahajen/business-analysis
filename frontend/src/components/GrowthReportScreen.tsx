@@ -117,7 +117,6 @@ function OpportunityCard({ opp, rank }: { opp: GrowthOpportunity; rank: number }
             <div className="text-gray-400 text-lg mt-1">{expanded ? '▲' : '▼'}</div>
           </div>
         </div>
-
         <p className="text-gray-600 text-sm mt-4 leading-relaxed">{opp.description}</p>
       </div>
 
@@ -129,14 +128,12 @@ function OpportunityCard({ opp, rank }: { opp: GrowthOpportunity; rank: number }
               <p className="text-sm text-blue-800">{opp.competitorEvidence}</p>
             </div>
           )}
-
           {opp.trendSignal && (
             <div className="bg-purple-50 rounded-xl p-4">
               <div className="text-xs font-semibold text-purple-700 uppercase tracking-wide mb-1">Market Trend Signal</div>
               <p className="text-sm text-purple-800">{opp.trendSignal}</p>
             </div>
           )}
-
           {opp.implementationSteps && opp.implementationSteps.length > 0 && (
             <div className="bg-gray-50 rounded-xl p-4">
               <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Implementation Steps</div>
@@ -152,7 +149,6 @@ function OpportunityCard({ opp, rank }: { opp: GrowthOpportunity; rank: number }
               </ol>
             </div>
           )}
-
           {opp.providers && opp.providers.length > 0 && (
             <div>
               <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Local Implementation Providers</div>
@@ -203,51 +199,32 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Header */}
       <div className="bg-gradient-to-r from-emerald-900 to-teal-700 text-white">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <button
-            onClick={onBack}
-            className="text-emerald-300 hover:text-white text-sm mb-4 flex items-center gap-1 transition-colors"
-          >
+          <button onClick={onBack} className="text-emerald-300 hover:text-white text-sm mb-4 flex items-center gap-1 transition-colors">
             ← Dashboard
           </button>
-
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex-1 min-w-0">
-              <div className="text-emerald-300 text-xs font-syne uppercase tracking-widest mb-1">
-                SiteAnalyzer Pro · Sales Growth Advisor
-              </div>
+              <div className="text-emerald-300 text-xs font-syne uppercase tracking-widest mb-1">SiteAnalyzer Pro · Sales Growth Advisor</div>
               <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-1">{data.businessName}</h1>
               <p className="text-emerald-200 text-sm">{data.businessType} · {data.location}</p>
               <p className="text-emerald-300 text-xs mt-1">Generated {formatDate(generatedAt)}</p>
             </div>
-
             <div className="flex flex-col items-end gap-3 flex-shrink-0">
               <div className="text-right">
-                <div className="text-xs text-emerald-300 uppercase tracking-wide mb-0.5">
-                  Total Revenue Opportunity
-                </div>
-                <div className="font-syne font-black text-2xl sm:text-3xl text-white">
-                  {data.totalEstimatedMonthlyRevenueRange}
-                </div>
+                <div className="text-xs text-emerald-300 uppercase tracking-wide mb-0.5">Total Revenue Opportunity</div>
+                <div className="font-syne font-black text-2xl sm:text-3xl text-white">{data.totalEstimatedMonthlyRevenueRange}</div>
                 <div className="text-emerald-300 text-xs mt-0.5">estimated monthly range</div>
               </div>
-              <button
-                onClick={handleDownload}
-                className="bg-white text-emerald-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2"
-              >
+              <button onClick={handleDownload} className="bg-white text-emerald-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2">
                 ⬇ Download HTML
               </button>
             </div>
           </div>
-
-          {/* Top Quick Win Banner */}
           {data.topQuickWin && (
             <div className="mt-6 bg-white/15 backdrop-blur-sm rounded-2xl px-5 py-4 border border-white/20">
-              <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-1">
-                Top Quick Win
-              </div>
+              <div className="text-xs font-semibold text-emerald-300 uppercase tracking-wide mb-1">Top Quick Win</div>
               <p className="text-white text-sm font-medium">{data.topQuickWin}</p>
             </div>
           )}
@@ -255,10 +232,8 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
-
         <Disclaimer />
 
-        {/* Business Overview */}
         <section>
           <SectionHeader title="Business Overview" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -266,10 +241,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current Products / Services</div>
               <ul className="space-y-1.5">
                 {(data.currentProducts || []).map((p, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2 items-start">
-                    <span className="text-gray-300 flex-shrink-0 mt-0.5">•</span>
-                    {p}
-                  </li>
+                  <li key={i} className="text-sm text-gray-700 flex gap-2 items-start"><span className="text-gray-300 flex-shrink-0 mt-0.5">•</span>{p}</li>
                 ))}
               </ul>
             </div>
@@ -277,10 +249,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Current Sales Channels</div>
               <ul className="space-y-1.5">
                 {(data.currentChannels || []).map((c, i) => (
-                  <li key={i} className="text-sm text-gray-700 flex gap-2 items-start">
-                    <span className="text-gray-300 flex-shrink-0 mt-0.5">•</span>
-                    {c}
-                  </li>
+                  <li key={i} className="text-sm text-gray-700 flex gap-2 items-start"><span className="text-gray-300 flex-shrink-0 mt-0.5">•</span>{c}</li>
                 ))}
               </ul>
             </div>
@@ -291,7 +260,6 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
           </div>
         </section>
 
-        {/* 90-Day Roadmap */}
         <section>
           <SectionHeader title="90-Day Action Roadmap" />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -318,7 +286,6 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
           </div>
         </section>
 
-        {/* Growth Opportunities */}
         <section>
           <SectionHeader title={`Growth Opportunities (${sortedOpportunities.length})`} />
           <div className="space-y-4">
@@ -328,7 +295,6 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
           </div>
         </section>
 
-        {/* Competitors */}
         {data.competitors && data.competitors.length > 0 && (
           <section>
             <SectionHeader title="Competitor Intelligence" />
@@ -338,11 +304,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
                       <h3 className="font-syne font-bold text-lg text-gray-900">{c.name}</h3>
-                      {c.url && (
-                        <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">
-                          {c.url}
-                        </a>
-                      )}
+                      {c.url && <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">{c.url}</a>}
                       {c.distance && <span className="ml-3 text-xs text-gray-400">{c.distance}</span>}
                     </div>
                   </div>
@@ -350,54 +312,26 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
                     {c.uniqueProducts && c.uniqueProducts.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Unique Products</div>
-                        <ul className="space-y-1">
-                          {c.uniqueProducts.map((p, j) => (
-                            <li key={j} className="text-sm text-gray-600 flex gap-1.5 items-start">
-                              <span className="text-gray-300 flex-shrink-0 mt-0.5">→</span>
-                              {p}
-                            </li>
-                          ))}
-                        </ul>
+                        <ul className="space-y-1">{c.uniqueProducts.map((p, j) => <li key={j} className="text-sm text-gray-600 flex gap-1.5 items-start"><span className="text-gray-300 flex-shrink-0 mt-0.5">→</span>{p}</li>)}</ul>
                       </div>
                     )}
                     {c.salesChannels && c.salesChannels.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Sales Channels</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {c.salesChannels.map((ch, j) => (
-                            <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{ch}</span>
-                          ))}
-                        </div>
+                        <div className="flex flex-wrap gap-1.5">{c.salesChannels.map((ch, j) => <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{ch}</span>)}</div>
                       </div>
                     )}
                     {c.strengthsOverTarget && c.strengthsOverTarget.length > 0 && (
                       <div>
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Strengths Over You</div>
-                        <ul className="space-y-1">
-                          {c.strengthsOverTarget.map((s, j) => (
-                            <li key={j} className="text-sm text-gray-600 flex gap-1.5 items-start">
-                              <span className="text-orange-400 flex-shrink-0 mt-0.5">!</span>
-                              {s}
-                            </li>
-                          ))}
-                        </ul>
+                        <ul className="space-y-1">{c.strengthsOverTarget.map((s, j) => <li key={j} className="text-sm text-gray-600 flex gap-1.5 items-start"><span className="text-orange-400 flex-shrink-0 mt-0.5">!</span>{s}</li>)}</ul>
                       </div>
                     )}
                   </div>
                   {(c.pricingNotes || c.loyaltyOrPromos) && (
                     <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {c.pricingNotes && (
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pricing: </span>
-                          <span className="text-sm text-gray-600">{c.pricingNotes}</span>
-                        </div>
-                      )}
-                      {c.loyaltyOrPromos && (
-                        <div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Loyalty/Promos: </span>
-                          <span className="text-sm text-gray-600">{c.loyaltyOrPromos}</span>
-                        </div>
-                      )}
+                      {c.pricingNotes && <div><span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Pricing: </span><span className="text-sm text-gray-600">{c.pricingNotes}</span></div>}
+                      {c.loyaltyOrPromos && <div><span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Loyalty/Promos: </span><span className="text-sm text-gray-600">{c.loyaltyOrPromos}</span></div>}
                     </div>
                   )}
                 </div>
@@ -406,7 +340,6 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
           </section>
         )}
 
-        {/* Trend Signals */}
         {data.trendSignals && data.trendSignals.length > 0 && (
           <section>
             <SectionHeader title="Market Trend Signals" />
@@ -415,9 +348,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
                 <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm">{t.trend}</h4>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${URGENCY_COLOR[t.urgency] || 'bg-gray-100 text-gray-600'}`}>
-                      {t.urgency}
-                    </span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${URGENCY_COLOR[t.urgency] || 'bg-gray-100 text-gray-600'}`}>{t.urgency}</span>
                   </div>
                   <p className="text-sm text-gray-500">{t.relevance}</p>
                 </div>
@@ -428,12 +359,9 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
 
         <Disclaimer />
 
-        {/* Footer */}
         <div className="text-center py-8 border-t border-gray-200 text-gray-400 text-sm">
           Sales Growth Advisor by <strong className="text-gray-600">SiteAnalyzer Pro</strong> · {formatDate(generatedAt)}
-          <div className="text-xs mt-1">
-            <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{url}</a>
-          </div>
+          <div className="text-xs mt-1"><a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{url}</a></div>
         </div>
       </div>
     </div>

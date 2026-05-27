@@ -63,10 +63,7 @@ function scoreBg(s: number): string {
 function ScoreBar({ value }: { value: number }) {
   return (
     <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-      <div
-        className={`h-full rounded-full transition-all duration-700 ${scoreBg(value)}`}
-        style={{ width: `${value}%` }}
-      />
+      <div className={`h-full rounded-full transition-all duration-700 ${scoreBg(value)}`} style={{ width: `${value}%` }} />
     </div>
   );
 }
@@ -81,9 +78,7 @@ function Badge({ label, className }: { label: string; className: string }) {
 
 function SectionHeader({ title }: { title: string }) {
   return (
-    <h2 className="font-syne font-bold text-xl text-gray-900 mb-5 pb-3 border-b border-gray-200">
-      {title}
-    </h2>
+    <h2 className="font-syne font-bold text-xl text-gray-900 mb-5 pb-3 border-b border-gray-200">{title}</h2>
   );
 }
 
@@ -113,40 +108,23 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Report Header */}
       <div className="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
         <div className="max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div>
-              <button
-                onClick={onBack}
-                className="text-blue-300 hover:text-white text-sm mb-3 flex items-center gap-1 transition-colors"
-              >
-                ← Dashboard
-              </button>
-              <div className="text-blue-300 text-xs font-syne uppercase tracking-widest mb-1">
-                SiteAnalyzer Pro
-              </div>
+              <button onClick={onBack} className="text-blue-300 hover:text-white text-sm mb-3 flex items-center gap-1 transition-colors">← Dashboard</button>
+              <div className="text-blue-300 text-xs font-syne uppercase tracking-widest mb-1">SiteAnalyzer Pro</div>
               <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-2">{data.businessName}</h1>
               <p className="text-blue-200 text-sm">{data.businessType} · {data.location}</p>
               <p className="text-blue-300 text-xs mt-2">Generated {formatDate(generatedAt)}</p>
             </div>
-
             <div className="flex items-center gap-4 flex-shrink-0">
               <div className="text-center">
-                <div className={`font-syne font-black text-5xl ${scoreColor(data.overallScore)}`}>
-                  {data.overallScore}
-                </div>
+                <div className={`font-syne font-black text-5xl ${scoreColor(data.overallScore)}`}>{data.overallScore}</div>
                 <div className="text-blue-300 text-xs mt-1">Overall Score</div>
-                <div className="mt-2 px-3 py-1 bg-white/10 rounded-full text-xs">
-                  {data.marketPosition}
-                </div>
+                <div className="mt-2 px-3 py-1 bg-white/10 rounded-full text-xs">{data.marketPosition}</div>
               </div>
-
-              <button
-                onClick={handleDownload}
-                className="bg-white text-blue-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors flex items-center gap-2"
-              >
+              <button onClick={handleDownload} className="bg-white text-blue-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors flex items-center gap-2">
                 ⬇ Download HTML
               </button>
             </div>
@@ -155,18 +133,13 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-10 space-y-12">
-
         <Disclaimer />
 
-        {/* Executive Summary */}
         <section>
           <SectionHeader title="Executive Summary" />
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 text-gray-600 leading-relaxed text-[15px]">
-            {data.executiveSummary}
-          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 text-gray-600 leading-relaxed text-[15px]">{data.executiveSummary}</div>
         </section>
 
-        {/* Score Cards */}
         <section>
           <SectionHeader title="Performance Scores" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -183,8 +156,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                 <ul className="mt-4 space-y-2">
                   {findings.map((f, i) => (
                     <li key={i} className="text-xs text-gray-500 flex gap-1.5 items-start">
-                      <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>
-                      {f}
+                      <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>{f}
                     </li>
                   ))}
                 </ul>
@@ -193,7 +165,6 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
           </div>
         </section>
 
-        {/* Competitors */}
         <section>
           <SectionHeader title="Competitor Analysis" />
           <div className="space-y-4">
@@ -204,61 +175,35 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-syne font-bold text-lg text-gray-900">{c.name}</h3>
                     </div>
-                    <a
-                      href={c.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 text-sm hover:underline"
-                    >
-                      {c.url}
-                    </a>
+                    <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">{c.url}</a>
                     <p className="text-gray-600 text-sm mt-3 leading-relaxed">{c.description}</p>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      {c.tags.map((t, j) => (
-                        <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">
-                          {t}
-                        </span>
-                      ))}
+                      {c.tags.map((t, j) => <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{t}</span>)}
                     </div>
-
                     {c.products && c.products.length > 0 && (
                       <div className="mt-4">
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Products & Services</div>
                         <ul className="space-y-1">
-                          {c.products.map((p, j) => (
-                            <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start">
-                              <span className="text-blue-400 mt-0.5 flex-shrink-0">▸</span>
-                              {p}
-                            </li>
-                          ))}
+                          {c.products.map((p, j) => <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start"><span className="text-blue-400 mt-0.5 flex-shrink-0">▸</span>{p}</li>)}
                         </ul>
                       </div>
                     )}
-
                     {c.marketingTactics && c.marketingTactics.length > 0 && (
                       <div className="mt-4">
                         <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Marketing Tactics</div>
                         <ul className="space-y-1">
-                          {c.marketingTactics.map((m, j) => (
-                            <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start">
-                              <span className="text-purple-400 mt-0.5 flex-shrink-0">▸</span>
-                              {m}
-                            </li>
-                          ))}
+                          {c.marketingTactics.map((m, j) => <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start"><span className="text-purple-400 mt-0.5 flex-shrink-0">▸</span>{m}</li>)}
                         </ul>
                       </div>
                     )}
                   </div>
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-syne font-bold text-xl flex-shrink-0 ${scoreBg(c.score)}`}>
-                    {c.score}
-                  </div>
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-syne font-bold text-xl flex-shrink-0 ${scoreBg(c.score)}`}>{c.score}</div>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Strengths & Weaknesses */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <section>
             <SectionHeader title="Strengths" />
@@ -267,9 +212,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                 <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
-                      {s.category}
-                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">{s.category}</span>
                   </div>
                   <p className="text-gray-500 text-sm leading-relaxed mb-3">{s.description}</p>
                   <ScoreBar value={s.score} />
@@ -278,7 +221,6 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
               ))}
             </div>
           </section>
-
           <section>
             <SectionHeader title="Weaknesses" />
             <div className="space-y-4">
@@ -296,52 +238,36 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
           </section>
         </div>
 
-        {/* Gap Analysis */}
         <section>
           <SectionHeader title="Gap Analysis" />
           <div className="space-y-4">
             {data.gaps.map((g, i) => (
-              <div
-                key={i}
-                className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[g.priority]} p-6`}
-              >
+              <div key={i} className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[g.priority]} p-6`}>
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <h4 className="font-semibold text-gray-900">{g.title}</h4>
                   <div className="flex gap-2 flex-shrink-0">
                     <Badge label={g.priority} className={PRIORITY_COLOR[g.priority]} />
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full border border-gray-200">
-                      {g.category}
-                    </span>
+                    <span className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full border border-gray-200">{g.category}</span>
                   </div>
                 </div>
                 <p className="text-gray-600 text-sm leading-relaxed mb-3">{g.description}</p>
-                <p className="text-xs text-gray-400">
-                  Competitor doing this better: <strong className="text-gray-600">{g.competitor}</strong>
-                </p>
+                <p className="text-xs text-gray-400">Competitor doing this better: <strong className="text-gray-600">{g.competitor}</strong></p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Competitor-Inspired Opportunities */}
         {data.competitorOpportunities && data.competitorOpportunities.length > 0 && (
           <section>
             <SectionHeader title="Competitor-Inspired Opportunities" />
-            <p className="text-sm text-gray-500 mb-5 -mt-2">
-              Products, services, and marketing tactics used by your competitors — evaluated for fit with your specific business.
-            </p>
+            <p className="text-sm text-gray-500 mb-5 -mt-2">Products, services, and marketing tactics used by your competitors — evaluated for fit with your specific business.</p>
             <div className="space-y-4">
               {data.competitorOpportunities.map((opp: CompetitorOpportunity, i: number) => (
-                <div
-                  key={i}
-                  className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[opp.priority]} p-6`}
-                >
+                <div key={i} className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[opp.priority]} p-6`}>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <h4 className="font-semibold text-gray-900">{opp.title}</h4>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        Seen at: <strong className="text-gray-600">{opp.sourceCompetitor}</strong>
-                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">Seen at: <strong className="text-gray-600">{opp.sourceCompetitor}</strong></p>
                     </div>
                     <div className="flex flex-wrap gap-2 flex-shrink-0">
                       <Badge label={opp.fitScore} className={FIT_COLOR[opp.fitScore]} />
@@ -349,23 +275,18 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                       <Badge label={opp.priority} className={PRIORITY_COLOR[opp.priority]} />
                     </div>
                   </div>
-
                   <p className="text-gray-600 text-sm leading-relaxed mb-3">{opp.description}</p>
-
                   <div className="bg-blue-50 rounded-xl p-4 mb-4">
                     <div className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Fit Assessment</div>
                     <p className="text-sm text-blue-900 leading-relaxed">{opp.fitAssessment}</p>
                   </div>
-
                   {opp.implementationSteps && opp.implementationSteps.length > 0 && (
                     <div className="bg-gray-50 rounded-xl p-4">
                       <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">How to Adopt This</div>
                       <ol className="space-y-2">
                         {opp.implementationSteps.map((step, j) => (
                           <li key={j} className="flex gap-3 text-sm text-gray-600">
-                            <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                              {j + 1}
-                            </span>
+                            <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{j + 1}</span>
                             {step}
                           </li>
                         ))}
@@ -378,7 +299,6 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
           </section>
         )}
 
-        {/* Solutions */}
         <section>
           <SectionHeader title="Strategic Recommendations" />
           <div className="space-y-6">
@@ -392,24 +312,17 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                     <Badge label={`Effort: ${s.effort}`} className={EFFORT_COLOR[s.effort] + ' border-transparent'} />
                   </div>
                 </div>
-
                 <p className="text-gray-600 text-sm leading-relaxed mb-4">{s.description}</p>
-
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-xs text-gray-500">Estimated cost:</span>
                   <span className="font-semibold text-gray-900 text-sm">{s.estimatedCost}</span>
                 </div>
-
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                    Implementation Steps
-                  </div>
+                  <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">Implementation Steps</div>
                   <ol className="space-y-2">
                     {s.steps.map((step, j) => (
                       <li key={j} className="flex gap-3 text-sm text-gray-600">
-                        <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
-                          {j + 1}
-                        </span>
+                        <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{j + 1}</span>
                         {step}
                       </li>
                     ))}
@@ -422,7 +335,6 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
 
         <Disclaimer />
 
-        {/* Footer */}
         <div className="text-center py-8 border-t border-gray-200 text-gray-400 text-sm">
           Generated by <strong className="text-gray-600">SiteAnalyzer Pro</strong> · {formatDate(generatedAt)}
         </div>

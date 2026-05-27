@@ -132,7 +132,6 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Sans', sans-serif; color: #1e293b; background: #f8fafc; line-height: 1.6; }
     h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
-
     .header { background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%); color: white; padding: 48px; }
     .header-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 24px; }
     .brand { font-size: 13px; opacity: 0.8; margin-bottom: 8px; font-family: 'Syne', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; }
@@ -144,22 +143,17 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     .revenue-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
     .quickwin-banner { margin-top: 24px; background: rgba(255,255,255,0.15); border-radius: 14px; padding: 16px 20px; border: 1px solid rgba(255,255,255,0.2); }
     .quickwin-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.7; margin-bottom: 4px; }
-
     .meta-bar { background: white; border-bottom: 1px solid #e2e8f0; padding: 12px 24px; font-size: 13px; color: #64748b; display: flex; gap: 24px; flex-wrap: wrap; }
-
     .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
     section { margin-bottom: 48px; }
     section h2 { font-size: 22px; font-weight: 700; color: #1e293b; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }
-
     .disclaimer { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 14px 18px; font-size: 13px; color: #92400e; line-height: 1.6; margin-bottom: 32px; }
-
     .overview-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     .overview-card { background: white; border-radius: 14px; padding: 20px; border: 1px solid #e2e8f0; }
     .overview-card h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; margin-bottom: 12px; }
     .overview-card ul { list-style: none; }
     .overview-card ul li { font-size: 14px; color: #374151; padding: 4px 0; border-bottom: 1px solid #f1f5f9; display: flex; gap: 8px; align-items: flex-start; }
     .overview-card ul li::before { content: '•'; color: #d1d5db; flex-shrink: 0; }
-
     .roadmap-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     .roadmap-month { background: white; border-radius: 14px; padding: 20px; border: 1px solid #e2e8f0; }
     .roadmap-label { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 2px; }
@@ -167,7 +161,6 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     .roadmap-action { background: #f8fafc; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
     .roadmap-action strong { font-size: 13px; display: block; margin-bottom: 4px; }
     .roadmap-action p { font-size: 12px; color: #64748b; }
-
     .opp-card { background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 16px; }
     .opp-header { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 14px; }
     .opp-rank { width: 36px; height: 36px; background: #2563eb; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; flex-shrink: 0; margin-top: 2px; }
@@ -190,7 +183,6 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     .provider-card p { font-size: 13px; color: #475569; margin-bottom: 6px; }
     .provider-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #64748b; }
     .provider-meta a { color: #2563eb; text-decoration: none; }
-
     .card { background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; margin-bottom: 16px; }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
     .card h3 { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
@@ -202,7 +194,6 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     .mini-section strong { color: #374151; }
     .mini-section ul { padding-left: 16px; margin-top: 4px; }
     .mini-section ul li { color: #475569; padding: 2px 0; }
-
     .tags-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     .badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
     .badge-blue { background: #dbeafe; color: #1d4ed8; }
@@ -210,10 +201,8 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     .badges { display: flex; flex-wrap: wrap; gap: 6px; }
     .tag { background: #f1f5f9; color: #475569; font-size: 12px; padding: 3px 10px; border-radius: 999px; display: inline-block; margin: 2px; }
     .muted { color: #94a3b8 !important; font-size: 13px; }
-
     .footer { text-align: center; padding: 32px; color: #94a3b8; font-size: 13px; border-top: 1px solid #e2e8f0; margin-top: 48px; }
     .footer strong { color: #1e293b; }
-
     @media print {
       body { background: white; }
       .header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -222,7 +211,6 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
   </style>
 </head>
 <body>
-
 <div class="header">
   <div class="header-top">
     <div>
@@ -242,17 +230,13 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
     <div>${data.topQuickWin}</div>
   </div>` : ''}
 </div>
-
 <div class="meta-bar">
   <span>📅 Generated: ${now}</span>
   <span>🌐 Analyzed: ${url}</span>
   <span>📊 Sales Growth Advisor by SiteAnalyzer Pro</span>
 </div>
-
 <div class="container">
-
   ${disclaimerBlock}
-
   <section>
     <h2>Business Overview</h2>
     <div class="overview-grid">
@@ -270,38 +254,30 @@ export function generateGrowthHtmlReport(data: GrowthAdvisorData, url: string, g
       </div>
     </div>
   </section>
-
   <section>
     <h2>90-Day Action Roadmap</h2>
     <div class="roadmap-grid">${roadmapMonths}</div>
   </section>
-
   <section>
     <h2>Growth Opportunities (${(data.opportunities || []).length})</h2>
     ${opportunityCards}
   </section>
-
   ${(data.competitors || []).length > 0 ? `
   <section>
     <h2>Competitor Intelligence</h2>
     ${competitorCards}
   </section>` : ''}
-
   ${(data.trendSignals || []).length > 0 ? `
   <section>
     <h2>Market Trend Signals</h2>
     <div class="tags-grid">${trendCards}</div>
   </section>` : ''}
-
   ${disclaimerBlock}
-
 </div>
-
 <div class="footer">
   <p>Generated by <strong>SiteAnalyzer Pro</strong> · Sales Growth Advisor</p>
   <p style="margin-top:4px">${now} · For informational purposes only</p>
 </div>
-
 </body>
 </html>`;
 }
