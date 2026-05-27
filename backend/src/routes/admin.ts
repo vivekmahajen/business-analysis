@@ -57,7 +57,7 @@ router.post('/discover', async (req: AuthRequest, res: Response): Promise<void> 
     city,
     ratingCeiling = 3.5,
     minReviews = 3,
-    maxResults = 50,
+    maxResults = 10,
     forceRefresh = false,
   } = req.body;
 

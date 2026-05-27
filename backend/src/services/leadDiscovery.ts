@@ -15,158 +15,81 @@ export interface LeadDiscoveryParams {
 }
 
 function buildLeadDiscoveryPrompt(p: Required<LeadDiscoveryParams>): string {
-  return `You are an expert business intelligence analyst and lead generation specialist
-working in ADMIN MODE. This function is restricted to admin users only.
-Your task is to identify small businesses that have an online presence but are
-underperforming on public review platforms (Yelp, Google, TripAdvisor, BBB).
-These businesses are struggling and represent ideal candidates for a growth
-intelligence platform.
+  return `You are an expert business intelligence analyst and lead generation specialist.
+Your task: find real ${p.category} businesses in ${p.city}, ${p.state} that have low public ratings and are struggling online.
 
-═══════════════════════════════════════════════════════
-INPUTS
-═══════════════════════════════════════════════════════
-CATEGORY: ${p.category}
-STATE: ${p.state}
-CITY: ${p.city}
-RATING_CEILING: ${p.ratingCeiling}
-MIN_REVIEWS: ${p.minReviews}
-MAX_RESULTS: ${p.maxResults}
-PLATFORM_NAME: ${PLATFORM_NAME}
-SIGNUP_URL: ${SIGNUP_URL}
+SEARCH INSTRUCTIONS
+Use web_search with these queries to find real businesses:
+1. Search: "${p.category} ${p.city} ${p.state} yelp 1 star 2 star 3 star low rating"
+2. Search: "site:yelp.com ${p.category} ${p.city} poor reviews"
+3. Search: "${p.category} ${p.city} ${p.state} google reviews 2 stars 3 stars"
+4. Search: "worst ${p.category} ${p.city} ${p.state} reviews complaints"
 
-═══════════════════════════════════════════════════════
-STEP 1 — DISCOVER LOW-RATED BUSINESSES WITH ONLINE PRESENCE
-═══════════════════════════════════════════════════════
-Search Yelp, Google Business, TripAdvisor, BBB, and Yellow Pages for businesses matching:
-  - Category: ${p.category}
-  - Location: ${p.city}, ${p.state}
-  - Rating: between 1.0 and ${p.ratingCeiling} stars
-  - Minimum reviews: ${p.minReviews} (filters sparse, unreliable ratings)
-  - Must have: a website URL OR active Google Business profile
-    (they are trying to be online but struggling — NOT businesses with zero presence)
+TARGET CRITERIA
+- Rating: 1.0 to ${p.ratingCeiling} stars on Yelp OR Google OR TripAdvisor OR BBB
+- Minimum reviews: ${p.minReviews} (skip sparse/spam listings)
+- Must have ANY online presence: website, Yelp page, or Google Business profile
+- Return up to ${p.maxResults} businesses total
+- Include the business even if you cannot find an email — set email: null
 
-For EACH business found, collect:
-  a) businessName: exact name as listed
-  b) category: one of the 12 standard categories
-  c) subCategory: specific type (e.g. "Pizza Restaurant" within Food & Restaurant)
-  d) rating: current average star rating (1.0–${p.ratingCeiling})
-  e) reviewCount: total public reviews
-  f) ratingTrend: analyse last 10 reviews vs overall — "declining", "flat", or "improving"
-  g) primarySource: Yelp / Google / TripAdvisor / BBB / Other
-  h) address: street address
-  i) city: city name
-  j) state: two-letter state abbreviation
-  k) zipCode: if available
-  l) phone: if publicly listed
-  m) website: full URL if present
-  n) lastReviewDate: date of most recent public review (YYYY-MM-DD)
+FOR EACH BUSINESS
+After web search, collect:
+- businessName, subCategory (specific type e.g. "Italian Restaurant"), rating, reviewCount
+- ratingTrend: compare last 5 reviews vs overall — "declining" | "flat" | "improving"
+- reviewResponseRate: estimate % of reviews owner has responded to
+- primarySource: where you found the rating (Yelp/Google/TripAdvisor/BBB/Other)
+- address, city, state (2-letter), zipCode, phone, website (if any)
+- email: crawl their website /contact and /about pages for mailto: links or email addresses; if none found set null
+- ownerName: if publicly listed on website or BBB, else null
+- contactFound: true if email found
+- hasOnlineOrdering: true/false (e.g. on DoorDash, Uber Eats, their own site)
+- hasSocialMedia: true/false (any active Facebook/Instagram)
+- lastReviewDate: most recent review date as YYYY-MM-DD
 
-═══════════════════════════════════════════════════════
-STEP 2 — EXTRACT CONTACT INFORMATION
-═══════════════════════════════════════════════════════
-For each business, attempt to find a direct contact email in this order:
-  1. Crawl the business website: /contact page, /about page, mailto: links,
-     schema.org email markup, footer email addresses
-  2. Google Business contact fields
-  3. BBB business listing contact section
-  4. Yellow Pages or Foursquare listing
-  5. If none found: set email to null, contactFound: false
+FIND 2-3 LOCAL COMPETITORS WHO ARE OUTPERFORMING THEM (rating 4.0+):
+- name, rating, reviewCount, keyAdvantage (one specific sentence: what do they do better?)
 
-Also collect where available:
-  - ownerName: first and last name of owner if publicly listed
-  - hasOnlineOrdering: true/false (relevant for Food & Restaurant)
-  - hasSocialMedia: true/false (any active Facebook/Instagram/TikTok found)
-  - reviewResponseRate: estimated % of reviews with an owner response
+GENERATE 3 TEASER FINDINGS (specific to this business, ends with "..."):
+Choose the 3 most alarming from:
+  T1 - Rating declining (show actual numbers from recent vs overall reviews)
+  T2 - Named competitor pulling customers away
+  T3 - Missing delivery/sales channel (DoorDash, Uber Eats, online ordering)
+  T4 - Review response rate vs local average
+  T5 - Repeated complaint theme in negative reviews with no owner response
+  T6 - Website quality gap (no menu, no online ordering, broken pages)
+  T7 - Social media silence vs active competitor
+  T8 - Off-peak revenue opportunity competitors capture
 
-═══════════════════════════════════════════════════════
-STEP 3 — COMPETITIVE CONTEXT
-═══════════════════════════════════════════════════════
-For each business, identify 2–3 direct local competitors in the same city and
-sub-category who are OUTPERFORMING them (rating 4.0 or higher). For each competitor:
-  - name: business name
-  - rating: their star rating
-  - reviewCount: their total reviews
-  - keyAdvantage: one specific sentence about what they do better
+GENERATE TEASER REPORT COPY:
+- emailSubject: "[businessName] — we found 3 things hurting your rating in ${p.city}"
+- emailSubjectVariant: "Why [businessName] is losing customers to [top competitor]"
+- openingHook: 2 personalised sentences referencing their actual rating + a named local competitor
+- ctaHeadline: "Get your complete competitive analysis"
+- ctaBody: "See all 12 findings, your personalised 90-day growth roadmap, and the exact steps your top competitors are using to outrank you."
+- ctaButtonText: "Get your full report — $99 →"
+- ctaUrl: "${SIGNUP_URL}?src=teaser&city=${p.city}&cat=${encodeURIComponent(p.category)}"
+- footerText: "Generated by ${PLATFORM_NAME} · Based on publicly available review data · To unsubscribe, reply STOP."
 
-═══════════════════════════════════════════════════════
-STEP 4 — TEASER ANALYSIS (3 of 12 findings — shown to business owner)
-═══════════════════════════════════════════════════════
-Generate exactly 3 TEASER FINDINGS per business for the preview report.
-These must be:
-  ✓ Genuinely specific to THIS business (use their actual rating, real review text,
-    real competitor names, real data points)
-  ✓ Impactful enough to make the reader think "I didn't know that" or "that's bad"
-  ✓ Framed as a problem or risk, not a solution (solutions are behind the paywall)
-  ✓ End with "..." to signal there is more — create a cliff-hanger
+CONVERSION SCORE (1–10):
++3 if rating ≤ 2.5 stars
++2 if email found
++2 if rating is declining
++1 if has a website
++1 if has social media
++1 if reviewCount > 50
 
-Select the 3 most impactful from these finding types:
-  T1 — Rating trend (declining momentum is the most alarming)
-  T2 — Specific competitor pulling customers away (name them)
-  T3 — Missing sales channel (delivery app, online ordering, catering)
-  T4 — Review response rate vs local market average
-  T5 — Unanswered negative reviews containing a repeated pain point
-  T6 — Website quality gap (missing pages, no online ordering, no menu)
-  T7 — Social media silence vs competitor activity
-  T8 — Off-peak opportunity competitors are capturing
+Sort businesses by conversionScore descending.
 
-ALSO generate 9 FULL FINDINGS stored in the database but NOT shown in the teaser.
-These are the conversion hook. Label them F4 through F12.
-
-═══════════════════════════════════════════════════════
-STEP 5 — TEASER REPORT COPY
-═══════════════════════════════════════════════════════
-For each business, generate the following teaser report components:
-
-EMAIL SUBJECT LINE:
-  "[businessName] — we found 3 things hurting your rating in ${p.city}"
-  Variant: "Why [businessName] is losing customers to [top competitor name]"
-
-OPENING HOOK (2 personalised sentences):
-  "[businessName] has [reviewCount] reviews averaging [rating] stars on [primarySource].
-   In ${p.city}'s ${p.category} market, that puts you behind [N] competitors — including
-   [top competitor name] ([their rating] ★) who just passed you in [primarySource]
-   search results."
-
-TEASER FINDINGS SECTION:
-  Show exactly 3 findings from Step 4.
-
-CALL TO ACTION BLOCK:
-  Headline: "Get your complete competitive analysis"
-  Body: "See all 12 findings, your personalised 90-day growth roadmap, and the
-         exact steps your top competitors are using to outrank you."
-  Button text: "Get your full report — $99 →"
-  Button URL: ${SIGNUP_URL}?ref=[businessId]&src=teaser&city=${p.city}&cat=${p.category}
-
-FOOTER:
-  "Generated by ${PLATFORM_NAME} · Based on publicly available review data ·
-   To unsubscribe, reply STOP or click here."
-
-═══════════════════════════════════════════════════════
-STEP 6 — PRIORITISE BY CONVERSION POTENTIAL
-═══════════════════════════════════════════════════════
-Score each business for conversion likelihood (1–10) based on:
-  - Lower rating = higher urgency (+3 for ≤2.5 stars)
-  - Email found = reachable (+2)
-  - Rating is declining (+2)
-  - Has a website (+1)
-  - Has social media (+1)
-  - High review count (+1 if >50 reviews)
-
-Sort the output list by conversionScore descending.
-
-═══════════════════════════════════════════════════════
-OUTPUT FORMAT — STRICT JSON ONLY
-═══════════════════════════════════════════════════════
-Return ONLY a valid JSON object. No markdown. No preamble. Start with { end with }.
+OUTPUT FORMAT — return ONLY valid JSON, no markdown, start with { end with }:
 
 {
   "queryMeta": {
-    "category": "string",
-    "state": "string",
-    "city": "string",
-    "ratingCeiling": 3.5,
-    "minReviews": 3,
-    "maxResults": 50,
+    "category": "${p.category}",
+    "state": "${p.state}",
+    "city": "${p.city}",
+    "ratingCeiling": ${p.ratingCeiling},
+    "minReviews": ${p.minReviews},
+    "maxResults": ${p.maxResults},
     "totalFound": 0,
     "contactFoundCount": 0,
     "avgRating": 0.0,
@@ -174,9 +97,8 @@ Return ONLY a valid JSON object. No markdown. No preamble. Start with { end with
   },
   "businesses": [
     {
-      "id": "biz_001",
       "businessName": "string",
-      "category": "string",
+      "category": "${p.category}",
       "subCategory": "string",
       "rating": 2.8,
       "reviewCount": 47,
@@ -184,41 +106,25 @@ Return ONLY a valid JSON object. No markdown. No preamble. Start with { end with
       "reviewResponseRate": "0%",
       "primarySource": "Yelp",
       "address": "string",
-      "city": "string",
-      "state": "CA",
+      "city": "${p.city}",
+      "state": "XX",
       "zipCode": "string or null",
       "phone": "string or null",
       "website": "https://... or null",
       "email": "owner@business.com or null",
       "ownerName": "string or null",
-      "contactFound": true,
+      "contactFound": false,
       "hasOnlineOrdering": false,
-      "hasSocialMedia": true,
+      "hasSocialMedia": false,
       "lastReviewDate": "YYYY-MM-DD",
       "conversionScore": 8,
       "competitors": [
-        {
-          "name": "string",
-          "rating": 4.3,
-          "reviewCount": 210,
-          "keyAdvantage": "string — specific one-sentence advantage"
-        }
+        { "name": "string", "rating": 4.3, "reviewCount": 210, "keyAdvantage": "one specific sentence" }
       ],
       "teaserFindings": [
-        {
-          "code": "T1",
-          "title": "string — short finding title",
-          "finding": "string — specific, personalised, ends with ..."
-        }
-      ],
-      "fullFindings": [
-        {
-          "code": "F4",
-          "title": "string",
-          "finding": "string — full detailed finding with recommendation",
-          "category": "Revenue",
-          "estimatedImpact": "$X,000/mo"
-        }
+        { "code": "T1", "title": "string", "finding": "specific finding ending with ..." },
+        { "code": "T2", "title": "string", "finding": "specific finding ending with ..." },
+        { "code": "T3", "title": "string", "finding": "specific finding ending with ..." }
       ],
       "teaserReport": {
         "emailSubject": "string",
@@ -227,11 +133,9 @@ Return ONLY a valid JSON object. No markdown. No preamble. Start with { end with
         "ctaHeadline": "Get your complete competitive analysis",
         "ctaBody": "string",
         "ctaButtonText": "Get your full report — $99 →",
-        "ctaUrl": "string — full URL with params",
+        "ctaUrl": "string",
         "footerText": "string"
-      },
-      "teaserFindingsShown": 3,
-      "fullFindingsCount": 12
+      }
     }
   ]
 }`;
@@ -244,14 +148,14 @@ export async function runLeadDiscovery(params: LeadDiscoveryParams): Promise<Rec
     city: params.city,
     ratingCeiling: params.ratingCeiling ?? 3.5,
     minReviews: params.minReviews ?? 3,
-    maxResults: params.maxResults ?? 50,
+    maxResults: params.maxResults ?? 10,
   };
 
   const prompt = buildLeadDiscoveryPrompt(fullParams);
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 12000,
+    max_tokens: 16000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: [{ type: 'web_search_20250305', name: 'web_search' }] as any,
     messages: [{ role: 'user', content: prompt }],
@@ -271,6 +175,8 @@ export async function runLeadDiscovery(params: LeadDiscoveryParams): Promise<Rec
         } catch (parseErr) {
           console.error('[leads] JSON parse failed, preview:', match[0].slice(0, 500));
         }
+      } else {
+        console.error('[leads] no JSON in block, preview:', block.text.slice(0, 300));
       }
     }
   }

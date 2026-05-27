@@ -310,7 +310,7 @@ function DiscoverTab() {
   const [state, setState] = useState('');
   const [ratingCeiling, setRatingCeiling] = useState(3.5);
   const [minReviews, setMinReviews] = useState(3);
-  const [maxResults, setMaxResults] = useState(50);
+  const [maxResults, setMaxResults] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<LeadDiscoveryResult | null>(null);
@@ -399,7 +399,7 @@ function DiscoverTab() {
             </div>
             <div>
               <label className="text-xs text-gray-500 block mb-1">Max results</label>
-              <input type="number" min={5} max={200} step={5} value={maxResults}
+              <input type="number" min={5} max={50} step={5} value={maxResults}
                 onChange={e => setMaxResults(Number(e.target.value))}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
