@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
@@ -44,6 +45,13 @@ app.get('/health', (_req, res) => {
 
 app.get('/api/ping', (_req, res) => {
   res.json({ pong: true, timestamp: new Date().toISOString() });
+});
+
+// Serve frontend static files (production: built by Railway)
+const frontendDist = path.join(__dirname, '..', '..', 'frontend', 'dist');
+app.use(express.static(frontendDist));
+app.get('*', (_req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
 app.listen(PORT, () => {
