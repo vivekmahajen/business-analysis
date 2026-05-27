@@ -154,7 +154,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                 <div className={`font-syne font-black text-4xl mb-3 ${scoreColor(score)}`}>{score}</div>
                 <ScoreBar value={score} />
                 <ul className="mt-4 space-y-2">
-                  {findings.map((f, i) => (
+                  {(findings || []).map((f, i) => (
                     <li key={i} className="text-xs text-gray-500 flex gap-1.5 items-start">
                       <span className="text-gray-300 mt-0.5 flex-shrink-0">→</span>{f}
                     </li>
@@ -168,7 +168,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
         <section>
           <SectionHeader title="Competitor Analysis" />
           <div className="space-y-4">
-            {data.competitors.map((c, i) => (
+            {(data.competitors || []).map((c, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
@@ -178,7 +178,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                     <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">{c.url}</a>
                     <p className="text-gray-600 text-sm mt-3 leading-relaxed">{c.description}</p>
                     <div className="flex flex-wrap gap-2 mt-3">
-                      {c.tags.map((t, j) => <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{t}</span>)}
+                      {(c.tags || []).map((t, j) => <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{t}</span>)}
                     </div>
                     {c.products && c.products.length > 0 && (
                       <div className="mt-4">
@@ -208,7 +208,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
           <section>
             <SectionHeader title="Strengths" />
             <div className="space-y-4">
-              {data.strengths.map((s, i) => (
+              {(data.strengths || []).map((s, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm">{s.title}</h4>
@@ -224,7 +224,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
           <section>
             <SectionHeader title="Weaknesses" />
             <div className="space-y-4">
-              {data.weaknesses.map((w, i) => (
+              {(data.weaknesses || []).map((w, i) => (
                 <div key={i} className="bg-white rounded-2xl border border-gray-200 p-5">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <h4 className="font-semibold text-gray-900 text-sm">{w.title}</h4>
@@ -241,7 +241,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
         <section>
           <SectionHeader title="Gap Analysis" />
           <div className="space-y-4">
-            {data.gaps.map((g, i) => (
+            {(data.gaps || []).map((g, i) => (
               <div key={i} className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[g.priority]} p-6`}>
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <h4 className="font-semibold text-gray-900">{g.title}</h4>
@@ -302,7 +302,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
         <section>
           <SectionHeader title="Strategic Recommendations" />
           <div className="space-y-6">
-            {data.solutions.map((s, i) => (
+            {(data.solutions || []).map((s, i) => (
               <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6">
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <h4 className="font-syne font-bold text-lg text-gray-900">{s.title}</h4>

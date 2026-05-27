@@ -61,7 +61,7 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
     const report = await prisma.report.findFirst({
       where: { userId: req.userId!, urlHash: hash },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true },
+      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, reportType: true },
     });
     if (report) {
       res.json({
@@ -72,6 +72,7 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
           radius: report.radiusMi,
           at: report.createdAt,
           data: report.reportData,
+          reportType: report.reportType,
         },
       });
     } else {
