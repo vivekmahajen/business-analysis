@@ -12,18 +12,8 @@ const PORT = process.env.PORT || 3001;
 // Raw body for Stripe webhooks
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
-const corsOptions = {
-  origin: (_origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    callback(null, true); // allow all origins
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 200,
-};
-
-app.options('*', cors(corsOptions));
-app.use(cors(corsOptions));
+app.options('*', cors({ origin: true, credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // Rate limiting for analysis endpoint (via payment confirm)
@@ -50,6 +40,10 @@ console.log('Routes registered: /api/auth, /api/reports, /api/payments');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/ping', (_req, res) => {
+  res.json({ pong: true, timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
