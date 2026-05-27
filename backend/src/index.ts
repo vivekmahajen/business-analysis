@@ -47,7 +47,7 @@ app.get('/api/ping', (_req, res) => {
   res.json({ pong: true, timestamp: new Date().toISOString() });
 });
 
-// Serve frontend static files (production: built by Railway)
+// Serve frontend static files
 const frontendDist = path.join(__dirname, '..', '..', 'frontend', 'dist');
 app.use(express.static(frontendDist));
 app.get('*', (_req, res) => {
