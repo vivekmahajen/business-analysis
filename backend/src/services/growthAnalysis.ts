@@ -28,7 +28,7 @@ Crawl and analyze ${url}. Extract:
 STEP 2 — COMPETITOR INTELLIGENCE SCAN
 ═══════════════════════════════════════════════
 
-Search the web for 5–8 DIRECT competitors within ${radius} miles of ${city}.
+Search the web for 4–5 DIRECT competitors within ${radius} miles of ${city}.
 For EACH competitor, analyze and document:
 
 a) PRODUCT/MENU BREADTH - What do they sell that the target business does NOT? Any specialty, niche, or trending items? Bundle deals, combo meals, or package pricing?
@@ -52,7 +52,7 @@ Search for in ${city} and ${state}:
 STEP 4 — GENERATE RANKED GROWTH OPPORTUNITIES
 ═══════════════════════════════════════════════
 
-Generate 8–12 specific, actionable revenue growth opportunities covering ALL five categories:
+Generate 6–8 specific, actionable revenue growth opportunities covering ALL five categories:
 
 CATEGORY A — PRODUCT / MENU EXPANSION: New products inspired by competitors and market trends. Be specific (not "add vegan options" — instead "add a build-your-own vegan pizza with cauliflower crust, currently offered by [Competitor X] at $16.99, trending +42% in ${city} searches this year").
 CATEGORY B — PRICING & BUNDLING TACTICS: New pricing structures, bundles, limited-time offers that competitors use successfully.
@@ -66,7 +66,7 @@ For EACH opportunity: opportunityTitle, category, description, competitorEvidenc
 STEP 5 — LOCAL IMPLEMENTATION PROVIDERS
 ═══════════════════════════════════════════════
 
-For the TOP 5 ranked opportunities, search for real local providers, platforms, or vendors in ${city} that can implement each change. For each: providerName, providerType, serviceDescription, estimatedCost, website, proximityNote.
+For the TOP 3 ranked opportunities, search for real local providers, platforms, or vendors in ${city} that can implement each change. For each: providerName, providerType, serviceDescription, estimatedCost, website, proximityNote.
 
 ═══════════════════════════════════════════════
 STEP 6 — 90-DAY ACTION ROADMAP
@@ -122,23 +122,29 @@ export async function generateGrowthAnalysis(
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 10000,
+    max_tokens: 16000,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     tools: [{ type: 'web_search_20250305', name: 'web_search' }] as any,
     messages: [{ role: 'user', content: prompt }],
   });
 
+  console.log('[growth] stop_reason:', response.stop_reason, 'blocks:', response.content.length);
+
   let result: Record<string, unknown> | null = null;
   for (const block of response.content) {
     if (block.type === 'text') {
+      console.log('[growth] text block length:', block.text.length);
       const match = block.text.match(/\{[\s\S]*\}/);
       if (match) {
         try {
           result = JSON.parse(match[0]);
           break;
-        } catch {
-          // try next
+        } catch (parseErr) {
+          console.error('[growth] JSON parse failed, first 500 chars:', match[0].slice(0, 500));
+          console.error('[growth] last 200 chars:', match[0].slice(-200));
         }
+      } else {
+        console.error('[growth] no JSON object found in text block, preview:', block.text.slice(0, 300));
       }
     }
   }
