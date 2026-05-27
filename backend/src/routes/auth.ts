@@ -13,14 +13,20 @@ function isAdminEmail(email: string): boolean {
   return adminEmails.includes(email.toLowerCase());
 }
 
+const AGREEMENT_VERSION = '1.0';
+
 router.post('/register', async (req: Request, res: Response): Promise<void> => {
-  const { name, email, password } = req.body;
+  const { name, email, password, agreedToTerms } = req.body;
   if (!name || !email || !password) {
     res.status(400).json({ error: 'Name, email, and password are required' });
     return;
   }
   if (password.length < 8) {
     res.status(400).json({ error: 'Password must be at least 8 characters' });
+    return;
+  }
+  if (!agreedToTerms) {
+    res.status(400).json({ error: 'You must agree to the Terms of Service to create an account' });
     return;
   }
   try {
@@ -34,6 +40,12 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       data: { name, email, password: hashed, isAdmin: isAdminEmail(email) },
       select: { id: true, name: true, email: true, isAdmin: true, createdAt: true },
     });
+
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || null;
+    await prisma.userAgreement.create({
+      data: { userId: user.id, agreementVersion: AGREEMENT_VERSION, ipAddress: ip },
+    });
+
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
     res.status(201).json({ user, token });
   } catch {

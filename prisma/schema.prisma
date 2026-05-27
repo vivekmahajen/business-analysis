@@ -9,14 +9,15 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String    @db.VarChar(255)
-  email     String    @unique @db.VarChar(255)
-  password  String    @db.VarChar(255)
-  isAdmin   Boolean   @default(false) @map("is_admin")
-  createdAt DateTime  @default(now()) @map("created_at")
-  reports   Report[]
-  payments  Payment[]
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String          @db.VarChar(255)
+  email      String          @unique @db.VarChar(255)
+  password   String          @db.VarChar(255)
+  isAdmin    Boolean         @default(false) @map("is_admin")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  reports    Report[]
+  payments   Payment[]
+  agreements UserAgreement[]
 
   @@map("users")
 }
@@ -48,6 +49,17 @@ model UrlScoreCache {
   updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("url_score_cache")
+}
+
+model UserAgreement {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  agreementVersion String   @default("1.0") @map("agreement_version") @db.VarChar(10)
+  signedAt         DateTime @default(now()) @map("signed_at")
+  ipAddress        String?  @map("ip_address") @db.VarChar(45)
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_agreements")
 }
 
 model Payment {

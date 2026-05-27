@@ -30,7 +30,7 @@ export const api = {
   register: (name: string, email: string, password: string) =>
     request<{ user: { id: string; name: string; email: string }; token: string }>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, agreedToTerms: true }),
     }),
 
   login: (email: string, password: string) =>
