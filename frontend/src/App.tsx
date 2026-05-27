@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, AnalysisData, GrowthAdvisorData, AnalysisEntry, Screen, AuthMode } from './types';
 import { api } from './utils/api';
+import { LanguageProvider } from './i18n';
 import LandingScreen from './components/LandingScreen';
 import AuthScreen from './components/AuthScreen';
 import DashboardScreen from './components/DashboardScreen';
@@ -10,7 +11,7 @@ import GeneratingScreen from './components/GeneratingScreen';
 import ReportScreen from './components/ReportScreen';
 import GrowthReportScreen from './components/GrowthReportScreen';
 
-export default function App() {
+function AppInner() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [user, setUser] = useState<User | null>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -308,4 +309,12 @@ export default function App() {
   }
 
   return null;
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppInner />
+    </LanguageProvider>
+  );
 }

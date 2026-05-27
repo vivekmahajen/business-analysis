@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { User, AnalysisEntry } from '../types';
+import { useI18n } from '../i18n';
+import LanguagePicker from './LanguagePicker';
 
 interface Props {
   user: User;
@@ -27,6 +29,7 @@ export default function DashboardScreen({
   const [reportType, setReportType] = useState<'competitive' | 'growth'>('competitive');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
+  const { t } = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,14 +73,15 @@ export default function DashboardScreen({
             <span className="text-sm text-gray-500 hidden sm:block">{user.name}</span>
             {isAdmin && (
               <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200">
-                Admin
+                {t.adminBadge}
               </span>
             )}
+            <LanguagePicker variant="minimal" className="!bg-gray-100 !border-gray-200 !text-gray-600 hover:!bg-gray-200 hover:!text-gray-900" />
             <button
               onClick={onLogout}
               className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
             >
-              Sign out
+              {t.signOut}
             </button>
           </div>
         </div>
@@ -87,10 +91,10 @@ export default function DashboardScreen({
         {/* URL Input Card */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 mb-8">
           <h1 className="font-syne font-bold text-2xl text-gray-900 mb-2">
-            Analyze a Website
+            {t.analyzeTitle}
           </h1>
           <p className="text-gray-500 mb-6">
-            Enter any business website URL and select a competitor search radius.
+            {t.analyzeSub}
           </p>
 
           {/* Report Type Toggle */}
@@ -105,7 +109,7 @@ export default function DashboardScreen({
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                Competitive Analysis
+                {t.competitiveAnalysis}
               </button>
               <button
                 type="button"
@@ -116,7 +120,7 @@ export default function DashboardScreen({
                     : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                Sales Growth Advisor
+                {t.salesGrowthAdvisor}
               </button>
             </div>
           </div>
@@ -140,7 +144,7 @@ export default function DashboardScreen({
                 className="border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
               >
                 {RADII.map(r => (
-                  <option key={r} value={r}>{r} mile{r !== 1 ? 's' : ''}</option>
+                  <option key={r} value={r}>{r} {r !== 1 ? t.milesLabel : t.mileLabel}</option>
                 ))}
               </select>
               <button
@@ -157,10 +161,10 @@ export default function DashboardScreen({
                 }`}
               >
                 {checking
-                  ? 'Checking…'
+                  ? t.checking
                   : reportType === 'growth'
-                    ? isAdmin ? 'Growth Advisor — Free' : 'Growth Advisor — $99'
-                    : isAdmin ? 'Competitive — Free' : 'Competitive — $99'
+                    ? isAdmin ? `${t.salesGrowthAdvisor} — Free` : `${t.salesGrowthAdvisor} — $99`
+                    : isAdmin ? `${t.competitiveAnalysis} — Free` : `${t.competitiveAnalysis} — $99`
                 }
               </button>
             </div>
@@ -172,14 +176,14 @@ export default function DashboardScreen({
                   type="text"
                   value={city}
                   onChange={e => setCity(e.target.value)}
-                  placeholder="City"
+                  placeholder={t.cityPlaceholder}
                   className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <input
                   type="text"
                   value={state}
                   onChange={e => setState(e.target.value)}
-                  placeholder="State"
+                  placeholder={t.statePlaceholder}
                   className="sm:w-36 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
@@ -202,13 +206,13 @@ export default function DashboardScreen({
         {/* Saved Reports */}
         <div>
           <h2 className="font-syne font-semibold text-lg text-gray-900 mb-4">
-            Your Reports ({saved.length})
+            {t.savedReportsTitle} ({saved.length})
           </h2>
 
           {saved.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
               <div className="text-4xl mb-3">📊</div>
-              <p className="text-gray-500">No reports yet. Analyze your first website above.</p>
+              <p className="text-gray-500">{t.noSavedReports}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -231,7 +235,7 @@ export default function DashboardScreen({
                       </div>
                       <div className="text-sm text-gray-400 truncate">{entry.url}</div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {formatDate(entry.at)} · {entry.radius} mile radius
+                        {formatDate(entry.at)} · {entry.radius} {t.mileRadius}
                         {isGrowth && entry.city && ` · ${entry.city}${entry.state ? `, ${entry.state}` : ''}`}
                       </div>
                     </div>
@@ -241,7 +245,7 @@ export default function DashboardScreen({
                         <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>
                           {score}
                         </div>
-                        <div className="text-xs text-gray-400">score</div>
+                        <div className="text-xs text-gray-400">{t.score.toLowerCase()}</div>
                       </div>
                     ) : (
                       <div className="text-right flex-shrink-0">
@@ -255,11 +259,11 @@ export default function DashboardScreen({
                         onClick={() => onViewReport(entry)}
                         className="bg-blue-50 text-blue-600 hover:bg-blue-100 font-medium px-4 py-2 rounded-lg text-sm transition-colors"
                       >
-                        View
+                        {t.viewReport}
                       </button>
                       <button
                         onClick={() => {
-                          if (confirm('Delete this report?')) onDeleteReport(entry.id);
+                          if (confirm(t.deleteConfirm)) onDeleteReport(entry.id);
                         }}
                         className="text-gray-400 hover:text-red-500 px-2 py-2 rounded-lg transition-colors"
                         title="Delete"

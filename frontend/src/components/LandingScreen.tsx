@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useI18n } from '../i18n';
+import LanguagePicker from './LanguagePicker';
 
 interface Props {
   onGetStarted: () => void;
@@ -201,6 +203,7 @@ function GrowthPreviewPanel() {
 
 export default function LandingScreen({ onGetStarted, onLogin }: Props) {
   const [activeTab, setActiveTab] = useState<'competitive' | 'growth'>('competitive');
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white">
@@ -208,26 +211,27 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
         <div className="font-syne font-bold text-xl tracking-tight">
           SiteAnalyzer <span className="text-blue-300">Pro</span>
         </div>
-        <button onClick={onLogin} className="text-sm text-blue-200 hover:text-white transition-colors">
-          Sign in
-        </button>
+        <div className="flex items-center gap-3">
+          <LanguagePicker variant="minimal" />
+          <button onClick={onLogin} className="text-sm text-blue-200 hover:text-white transition-colors">
+            {t.signIn}
+          </button>
+        </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-8 pt-20 pb-16 text-center">
         <div className="inline-flex items-center gap-2 bg-blue-800/50 border border-blue-600/30 rounded-full px-4 py-2 text-sm text-blue-200 mb-8">
           <span className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
-          AI-Powered Competitive Intelligence
+          {t.aiPowered}
         </div>
 
         <h1 className="font-syne font-extrabold text-5xl md:text-6xl leading-tight mb-6">
-          Know exactly where your<br />
-          <span className="text-blue-300">competitors have the edge</span>
+          {t.heroHeadline1}<br />
+          <span className="text-blue-300">{t.heroHeadline2}</span>
         </h1>
 
         <p className="text-xl text-blue-200 max-w-2xl mx-auto mb-10 leading-relaxed">
-          Enter any website URL and get a comprehensive competitive analysis report —
-          gap analysis, strengths, weaknesses, and a prioritized action roadmap.
-          Powered by Claude AI with real-time web search.
+          {t.heroSub}
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -235,26 +239,26 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
             onClick={onGetStarted}
             className="bg-white text-blue-900 font-semibold px-8 py-4 rounded-xl text-lg hover:bg-blue-50 transition-colors shadow-lg"
           >
-            Get Your Report — $99
+            {t.getReport}
           </button>
           <button
             onClick={onLogin}
             className="border border-blue-400/40 text-blue-200 font-semibold px-8 py-4 rounded-xl text-lg hover:bg-blue-800/50 transition-colors"
           >
-            View Saved Reports
+            {t.viewSavedReports}
           </button>
         </div>
 
         <p className="text-blue-400 text-sm mt-6">
-          One-time payment · No subscription · Reports saved free forever
+          {t.oneTimePayment}
         </p>
       </div>
 
       {/* Sample Report Preview */}
       <div className="max-w-5xl mx-auto px-8 pb-24">
         <div className="text-center mb-8">
-          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Sample Report</div>
-          <h2 className="font-syne font-bold text-3xl text-white mb-2">See exactly what you get</h2>
+          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">{t.sampleReport}</div>
+          <h2 className="font-syne font-bold text-3xl text-white mb-2">{t.seeExactlyWhatYouGet}</h2>
           <p className="text-blue-300 text-sm">Real report structure — sample data shown below</p>
         </div>
 
@@ -266,7 +270,7 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
                 activeTab === 'competitive' ? 'bg-blue-600 text-white' : 'text-blue-300 hover:bg-white/10'
               }`}
             >
-              Competitive Analysis
+              {t.competitiveAnalysis}
             </button>
             <button
               onClick={() => setActiveTab('growth')}
@@ -274,7 +278,7 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
                 activeTab === 'growth' ? 'bg-emerald-600 text-white' : 'text-blue-300 hover:bg-white/10'
               }`}
             >
-              Sales Growth Advisor
+              {t.salesGrowthAdvisor}
             </button>
           </div>
         </div>
@@ -319,13 +323,13 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
       </div>
 
       <div className="text-center py-20">
-        <h2 className="font-syne font-bold text-3xl mb-4">Ready to outpace your competition?</h2>
+        <h2 className="font-syne font-bold text-3xl mb-4">{t.readyToOutpace}</h2>
         <p className="text-blue-200 mb-8">Get your full competitive intelligence report in minutes.</p>
         <button
           onClick={onGetStarted}
           className="bg-white text-blue-900 font-semibold px-10 py-4 rounded-xl text-lg hover:bg-blue-50 transition-colors shadow-lg"
         >
-          Analyze a Website — $99
+          {t.analyzeWebsite}
         </button>
       </div>
     </div>
