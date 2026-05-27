@@ -107,7 +107,7 @@ Return ONLY a single valid JSON object with this structure:
     "month2": { "theme": "Growth moves", "actions": [{ "opportunityTitle": "string", "firstStep": "string" }] },
     "month3": { "theme": "Strategic plays", "actions": [{ "opportunityTitle": "string", "firstStep": "string" }] }
   },
-  "totalEstimatedMonthlyRevenueRange": "$X,000 – $Y,000/mo",
+  "totalEstimatedMonthlyRevenueRange": "$X,000 – $Y,000/mo (just the dollar range, no extra text)",
   "topQuickWin": "string"
 }`;
 }

@@ -131,7 +131,7 @@ function GrowthPreview({ data }: { data: GrowthAdvisorData }) {
         <div className="text-emerald-200 text-sm mb-4">{data.businessType} · {data.location}</div>
         <div>
           <div className="text-emerald-300 text-xs uppercase tracking-wide mb-1">Total Revenue Opportunity</div>
-          <div className="font-syne font-black text-3xl">{data.totalEstimatedMonthlyRevenueRange}</div>
+          <div className="font-syne font-black text-2xl break-words">{data.totalEstimatedMonthlyRevenueRange?.replace(/\s*\(.*\).*$/, '') || data.totalEstimatedMonthlyRevenueRange}</div>
           <div className="text-emerald-300 text-xs mt-0.5">estimated monthly range</div>
         </div>
         {data.topQuickWin && (

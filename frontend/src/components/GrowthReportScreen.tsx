@@ -207,17 +207,20 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
             <div className="flex-1 min-w-0">
               <div className="text-emerald-300 text-xs font-syne uppercase tracking-widest mb-1">SiteAnalyzer Pro · Sales Growth Advisor</div>
-              <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-1">{data.businessName}</h1>
+              <h1 className="font-syne font-extrabold text-3xl sm:text-4xl mb-1 break-words">{data.businessName}</h1>
               <p className="text-emerald-200 text-sm">{data.businessType} · {data.location}</p>
               <p className="text-emerald-300 text-xs mt-1">Generated {formatDate(generatedAt)}</p>
             </div>
-            <div className="flex flex-col items-end gap-3 flex-shrink-0">
+            <div className="flex flex-col items-end gap-3 flex-shrink-0 max-w-xs">
               <div className="text-right">
                 <div className="text-xs text-emerald-300 uppercase tracking-wide mb-0.5">Total Revenue Opportunity</div>
-                <div className="font-syne font-black text-2xl sm:text-3xl text-white">{data.totalEstimatedMonthlyRevenueRange}</div>
+                <div className="font-syne font-black text-xl sm:text-2xl text-white leading-tight break-words">
+                  {/* Strip any parenthetical suffix the AI sometimes adds */}
+                  {data.totalEstimatedMonthlyRevenueRange?.replace(/\s*\(.*\).*$/, '') || data.totalEstimatedMonthlyRevenueRange}
+                </div>
                 <div className="text-emerald-300 text-xs mt-0.5">estimated monthly range</div>
               </div>
-              <button onClick={handleDownload} className="bg-white text-emerald-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2">
+              <button onClick={handleDownload} className="bg-white text-emerald-900 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2 whitespace-nowrap">
                 ⬇ Download HTML
               </button>
             </div>
