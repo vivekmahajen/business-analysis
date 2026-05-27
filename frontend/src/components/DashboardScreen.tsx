@@ -82,10 +82,13 @@ export default function DashboardScreen({
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <input
+                id="url-input"
+                name="url"
                 type="text"
                 value={urlInput}
                 onChange={e => setUrlInput(e.target.value)}
                 placeholder="https://yourbusiness.com"
+                autoComplete="url"
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
