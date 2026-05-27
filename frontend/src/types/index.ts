@@ -12,6 +12,19 @@ export interface Competitor {
   score: number;
   tags: string[];
   description: string;
+  products: string[];
+  marketingTactics: string[];
+}
+
+export interface CompetitorOpportunity {
+  title: string;
+  description: string;
+  sourceCompetitor: string;
+  type: 'product' | 'service' | 'marketing';
+  fitAssessment: string;
+  fitScore: 'Strong Fit' | 'Good Fit' | 'Moderate Fit' | 'Poor Fit';
+  priority: 'Critical' | 'High' | 'Medium' | 'Low';
+  implementationSteps: string[];
 }
 
 export interface Strength {
@@ -58,6 +71,7 @@ export interface AnalysisData {
   weaknesses: Weakness[];
   gaps: Gap[];
   solutions: Solution[];
+  competitorOpportunities?: CompetitorOpportunity[];
   seoScore: number;
   seoFindings: string[];
   digitalScore: number;

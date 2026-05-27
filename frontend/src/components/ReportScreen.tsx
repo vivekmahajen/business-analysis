@@ -1,5 +1,5 @@
 import React from 'react';
-import { AnalysisData } from '../types';
+import { AnalysisData, CompetitorOpportunity } from '../types';
 import { generateHtmlReport } from '../utils/htmlExport';
 
 interface Props {
@@ -14,6 +14,19 @@ const PRIORITY_COLOR: Record<string, string> = {
   High: 'bg-orange-100 text-orange-700 border-orange-200',
   Medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
   Low: 'bg-green-100 text-green-700 border-green-200',
+};
+
+const FIT_COLOR: Record<string, string> = {
+  'Strong Fit': 'bg-green-100 text-green-700 border-green-200',
+  'Good Fit': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Moderate Fit': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+  'Poor Fit': 'bg-red-100 text-red-700 border-red-200',
+};
+
+const OPPORTUNITY_TYPE_LABEL: Record<string, string> = {
+  product: 'Product',
+  service: 'Service',
+  marketing: 'Marketing Tactic',
 };
 
 const PRIORITY_BORDER: Record<string, string> = {
@@ -195,6 +208,34 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                         </span>
                       ))}
                     </div>
+
+                    {c.products && c.products.length > 0 && (
+                      <div className="mt-4">
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Products & Services</div>
+                        <ul className="space-y-1">
+                          {c.products.map((p, j) => (
+                            <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start">
+                              <span className="text-blue-400 mt-0.5 flex-shrink-0">▸</span>
+                              {p}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {c.marketingTactics && c.marketingTactics.length > 0 && (
+                      <div className="mt-4">
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Marketing Tactics</div>
+                        <ul className="space-y-1">
+                          {c.marketingTactics.map((m, j) => (
+                            <li key={j} className="text-xs text-gray-600 flex gap-1.5 items-start">
+                              <span className="text-purple-400 mt-0.5 flex-shrink-0">▸</span>
+                              {m}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                   <div className={`w-14 h-14 rounded-full flex items-center justify-center text-white font-syne font-bold text-xl flex-shrink-0 ${scoreBg(c.score)}`}>
                     {c.score}
@@ -269,6 +310,61 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
             ))}
           </div>
         </section>
+
+        {/* Competitor-Inspired Opportunities */}
+        {data.competitorOpportunities && data.competitorOpportunities.length > 0 && (
+          <section>
+            <SectionHeader title="Competitor-Inspired Opportunities" />
+            <p className="text-sm text-gray-500 mb-5 -mt-2">
+              Products, services, and marketing tactics used by your competitors — evaluated for fit with your specific business.
+            </p>
+            <div className="space-y-4">
+              {data.competitorOpportunities.map((opp: CompetitorOpportunity, i: number) => (
+                <div
+                  key={i}
+                  className={`bg-white rounded-2xl border border-gray-200 border-l-4 ${PRIORITY_BORDER[opp.priority]} p-6`}
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">{opp.title}</h4>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Seen at: <strong className="text-gray-600">{opp.sourceCompetitor}</strong>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 flex-shrink-0">
+                      <Badge label={opp.fitScore} className={FIT_COLOR[opp.fitScore]} />
+                      <Badge label={OPPORTUNITY_TYPE_LABEL[opp.type]} className="bg-gray-100 text-gray-600 border-gray-200" />
+                      <Badge label={opp.priority} className={PRIORITY_COLOR[opp.priority]} />
+                    </div>
+                  </div>
+
+                  <p className="text-gray-600 text-sm leading-relaxed mb-3">{opp.description}</p>
+
+                  <div className="bg-blue-50 rounded-xl p-4 mb-4">
+                    <div className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-1">Fit Assessment</div>
+                    <p className="text-sm text-blue-900 leading-relaxed">{opp.fitAssessment}</p>
+                  </div>
+
+                  {opp.implementationSteps && opp.implementationSteps.length > 0 && (
+                    <div className="bg-gray-50 rounded-xl p-4">
+                      <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-3">How to Adopt This</div>
+                      <ol className="space-y-2">
+                        {opp.implementationSteps.map((step, j) => (
+                          <li key={j} className="flex gap-3 text-sm text-gray-600">
+                            <span className="w-5 h-5 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                              {j + 1}
+                            </span>
+                            {step}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Solutions */}
         <section>
