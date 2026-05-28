@@ -175,8 +175,8 @@ export default function DashboardScreen({
                 {checking
                   ? t.checking
                   : reportType === 'growth'
-                    ? isAdmin ? `${t.salesGrowthAdvisor} — Free` : `${t.salesGrowthAdvisor} — $99`
-                    : isAdmin ? `${t.competitiveAnalysis} — Free` : `${t.competitiveAnalysis} — $99`
+                    ? isAdmin ? `${t.salesGrowthAdvisor} — Free` : `${t.salesGrowthAdvisor} — $99/mo`
+                    : isAdmin ? `${t.competitiveAnalysis} — Free` : `${t.competitiveAnalysis} — $99/mo`
                 }
               </button>
             </div>
@@ -211,7 +211,7 @@ export default function DashboardScreen({
           <p className="text-xs text-gray-400 mt-4">
             {isAdmin
               ? 'Admin account · Reports generated free · No payment required'
-              : '$99 per report · Free retrieval of existing reports · Reports expire never'}
+              : '$99/mo · 50 reports/month · $299/mo standard · Free retrieval of existing reports'}
           </p>
         </div>
 

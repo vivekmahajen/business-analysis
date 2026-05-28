@@ -231,7 +231,7 @@ export default function FoundScreen({ entry, isAdmin, onViewFree, onGenerateNew,
                 : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {isAdmin ? 'Generate Fresh Report — Free' : 'Generate Fresh Report — $99'}
+            {isAdmin ? 'Generate Fresh Report — Free' : 'Generate Fresh Report'}
           </button>
         </div>
         <p className="text-xs text-gray-400 text-center mt-3">

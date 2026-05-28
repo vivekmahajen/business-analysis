@@ -294,7 +294,7 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
               onClick={onGetStarted}
               className="bg-white text-blue-900 font-semibold px-8 py-3 rounded-xl hover:bg-blue-50 transition-colors"
             >
-              Analyze Your Business — $99
+              {t.analyzeWebsite}
             </button>
           </div>
         </div>
@@ -322,6 +322,70 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
         </div>
       </div>
 
+      {/* Pricing Section */}
+      <div className="max-w-5xl mx-auto px-8 py-20">
+        <div className="text-center mb-12">
+          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">Pricing</div>
+          <h2 className="font-syne font-bold text-3xl text-white mb-2">Simple, transparent pricing</h2>
+          <p className="text-blue-300 text-sm">Start with our promotional offer — upgrade as you grow</p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          {/* Promotional — highlighted */}
+          <div className="relative bg-white rounded-2xl p-6 text-gray-900 shadow-2xl ring-4 ring-blue-400 order-first sm:order-none sm:-mt-4 sm:-mb-4">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">
+              LIMITED OFFER
+            </div>
+            <div className="text-center mb-5 pt-1">
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Promotional</div>
+              <div className="font-syne font-black text-5xl text-blue-600">$99<span className="text-xl text-gray-400 font-normal">/mo</span></div>
+              <div className="text-sm text-gray-400 mt-0.5 line-through">$299/mo regular</div>
+            </div>
+            <ul className="space-y-2.5 text-sm text-gray-700 mb-6">
+              {['50 reports per month', 'Competitive Analysis reports', 'Sales Growth Advisor reports', 'Reports saved forever', 'HTML export & download', 'Cancel anytime'].map(f => (
+                <li key={f} className="flex items-center gap-2"><span className="text-green-500 font-bold">✓</span> {f}</li>
+              ))}
+            </ul>
+            <button onClick={onGetStarted} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-colors">
+              Get Started — $99/mo
+            </button>
+          </div>
+
+          {/* Standard */}
+          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 text-white">
+            <div className="text-center mb-5">
+              <div className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-1">Standard</div>
+              <div className="font-syne font-black text-5xl">$299<span className="text-xl text-blue-300 font-normal">/mo</span></div>
+              <div className="text-xs text-blue-400 mt-0.5">Regular price</div>
+            </div>
+            <ul className="space-y-2.5 text-sm text-blue-200 mb-6">
+              {['50 reports per month', 'Competitive Analysis reports', 'Sales Growth Advisor reports', 'Reports saved forever', 'HTML export & download', 'Cancel anytime'].map(f => (
+                <li key={f} className="flex items-center gap-2"><span className="text-blue-400">✓</span> {f}</li>
+              ))}
+            </ul>
+          </div>
+
+          {/* High Volume */}
+          <div className="bg-white/10 border border-white/20 rounded-2xl p-6 text-white">
+            <div className="text-center mb-5">
+              <div className="text-xs font-semibold text-blue-300 uppercase tracking-wide mb-1">High Volume</div>
+              <div className="font-syne font-black text-5xl">$399<span className="text-xl text-blue-300 font-normal">/mo</span></div>
+              <div className="text-xs text-blue-400 mt-0.5">Over 50 reports/month</div>
+            </div>
+            <ul className="space-y-2.5 text-sm text-blue-200 mb-6">
+              {['Unlimited reports', 'Everything in Standard', 'Auto-upgrades at 50+ reports', 'Reports saved forever', 'HTML export & download', 'Cancel anytime'].map(f => (
+                <li key={f} className="flex items-center gap-2"><span className="text-blue-400">✓</span> {f}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <p className="text-center text-blue-400 text-xs mt-6">
+          Billed monthly · No long-term contract · All plans include free retrieval of existing reports
+        </p>
+      </div>
+
+      {/* Final CTA */}
       <div className="text-center py-20">
         <h2 className="font-syne font-bold text-3xl mb-4">{t.readyToOutpace}</h2>
         <p className="text-blue-200 mb-8">Get your full competitive intelligence report in minutes.</p>

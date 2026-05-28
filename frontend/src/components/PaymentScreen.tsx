@@ -67,8 +67,9 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className={`${headerClass} p-6 text-white`}>
             <div className="text-sm text-white/70 mb-1">{reportLabel}</div>
-            <div className="font-syne font-bold text-2xl">$99.00</div>
-            <div className="text-sm text-white/70 mt-2 break-all">
+            <div className="font-syne font-bold text-2xl">$99.00/mo</div>
+            <div className="text-sm text-white/70 mt-1">Monthly subscription · 50 reports included · Cancel anytime</div>
+            <div className="text-sm text-white/70 mt-1 break-all">
               {url} · {radius} mile radius
               {reportType === 'growth' && city && ` · ${city}${state ? `, ${state}` : ''}`}
             </div>
@@ -153,7 +154,7 @@ export default function PaymentScreen({ url, radius, reportType = 'competitive',
                 disabled={loading}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-4 rounded-xl transition-colors text-lg"
               >
-                {loading ? 'Processing…' : 'Pay $99.00 & Generate Report'}
+                {loading ? 'Processing…' : 'Subscribe — $99/mo'}
               </button>
             </form>
 
