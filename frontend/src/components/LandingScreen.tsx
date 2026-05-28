@@ -249,7 +249,7 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
           </button>
         </div>
 
-        <p className="text-blue-400 text-base font-medium mt-6">
+        <p className="text-blue-400 text-lg font-semibold mt-6">
           {t.oneTimePayment}
         </p>
       </div>
