@@ -197,7 +197,7 @@ const BASE_EN: T = {
   heroSub: 'Enter any business website and get a complete competitive analysis with actionable strategies to close the gap — in minutes.',
   getReport: 'Get Started — $99/mo',
   viewSavedReports: 'View Saved Reports',
-  oneTimePayment: 'Promotional price · 50 reports/month · $299/mo regular · Cancel anytime',
+  oneTimePayment: '$99/month until July 1st 2026 · 50 reports/month · $299/mo regular · Cancel anytime',
   sampleReport: 'Sample Report',
   seeExactlyWhatYouGet: 'See exactly what you get',
   competitiveAnalysis: 'Competitive Analysis',
