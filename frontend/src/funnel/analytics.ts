@@ -1,18 +1,22 @@
 // PostHog wrapper — gracefully no-ops if key not configured
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
 
-let ph: typeof import('posthog-js').default | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let ph: any = null;
 
 export async function initAnalytics() {
   if (!POSTHOG_KEY) return;
   try {
-    const posthog = (await import('posthog-js')).default;
+    // Dynamic import — posthog-js is optional; gracefully no-ops if missing
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const posthog = (await import('posthog-js' as any)).default;
     posthog.init(POSTHOG_KEY, {
       api_host: 'https://app.posthog.com',
       capture_pageview: true,
       autocapture: false,
       persistence: 'localStorage',
-      loaded: (p) => { if (import.meta.env.DEV) p.opt_out_capturing(); },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      loaded: (p: any) => { if (import.meta.env.DEV) p.opt_out_capturing(); },
     });
     ph = posthog;
   } catch {}
