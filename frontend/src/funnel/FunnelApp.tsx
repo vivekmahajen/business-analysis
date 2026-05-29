@@ -927,27 +927,15 @@ export default function FunnelApp() {
 
           {/* Footer CTA */}
           <div className="bg-gradient-to-br from-[#4F9EF5]/20 to-[#00CC88]/10 border border-[#4F9EF5]/30 rounded-2xl p-6 text-center">
-            <h2 className="text-xl font-bold text-white mb-2">Want ongoing competitive intelligence?</h2>
-            <p className="text-white/60 text-sm mb-4">Get weekly competitor updates, new gap alerts, and priority support from our team.</p>
-            <div className="flex flex-wrap gap-3 justify-center items-center mb-4">
-              <div className="text-center">
-                <p className="text-white/50 text-xs line-through">$299/mo regular</p>
-                <p className="text-2xl font-bold text-[#00CC88]">$99<span className="text-sm font-normal text-white/60">/mo</span></p>
-                <p className="text-white/50 text-xs">promotional</p>
-              </div>
-              <div className="text-white/30 text-sm">vs</div>
-              <div className="text-center">
-                <p className="text-white/50 text-xs">Semrush</p>
-                <p className="text-lg font-semibold text-white/50">$139<span className="text-sm font-normal">/mo</span></p>
-                <p className="text-white/40 text-xs">generic tools</p>
-              </div>
-            </div>
-            <a
-              href="/index.html"
+            <h2 className="text-xl font-bold text-white mb-2">Know another business that needs this?</h2>
+            <p className="text-white/60 text-sm mb-5">Run a free analysis for any website — restaurants, retailers, service businesses, and more.</p>
+            <button
+              onClick={() => setPhase('landing')}
               className="inline-block px-8 py-3 bg-[#4F9EF5] hover:bg-[#3b8de0] text-white font-semibold rounded-lg transition-colors text-base"
             >
-              Get Started Today →
-            </a>
+              Analyze Another Business →
+            </button>
+            <p className="text-white/30 text-xs mt-3">Free · No credit card · Takes 60 seconds</p>
           </div>
 
           <div className="h-12" />
