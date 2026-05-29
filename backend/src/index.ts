@@ -7,6 +7,7 @@ import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
+import funnelRouter from './routes/funnel';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -39,7 +40,8 @@ app.use('/api/reports', reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin');
+app.use('/api/funnel', funnelRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/funnel');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -116,3 +116,30 @@ model AdminLead {
   @@index([conversionScore])
   @@map("admin_leads")
 }
+
+model Lead {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String
+  firstName     String?   @map("first_name")
+  businessName  String?   @map("business_name")
+  analyzedUrl   String    @map("analyzed_url")
+  reportId      String?   @map("report_id") @db.Uuid
+  reportData    Json?     @map("report_data")
+  utmSource     String?   @map("utm_source")
+  utmMedium     String?   @map("utm_medium")
+  utmCampaign   String?   @map("utm_campaign")
+  referrer      String?
+  ipCountry     String?   @map("ip_country")
+  status        String    @default("captured")
+  dripTag       String?   @map("drip_tag")
+  convertedAt   DateTime? @map("converted_at")
+  paidAmount    Int?      @map("paid_amount")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@unique([email, analyzedUrl], name: "idx_leads_email_url")
+  @@index([email])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("leads")
+}
