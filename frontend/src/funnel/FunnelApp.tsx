@@ -1214,53 +1214,34 @@ export default function FunnelApp() {
         </div>
       </section>
 
-      {/* PRICING ANCHOR */}
+      {/* WHAT YOU GET FREE */}
       <section className="px-4 py-20 border-t border-white/5 bg-white/2">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl font-bold text-white mb-3">Simple, honest pricing</h2>
-          <p className="text-white/60 mb-10">Start free. Upgrade when you're ready for ongoing intelligence.</p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <p className="text-white/60 text-sm mb-2">One-time analysis</p>
-              <p className="text-3xl font-bold text-white mb-1">Free</p>
-              <p className="text-white/50 text-xs mb-4">Full report, email gate</p>
-              <ul className="space-y-2 text-left">
-                {['Full competitive report', '4–5 competitors', 'Gap analysis', '90-day roadmap'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-white/70 text-sm">
-                    <svg className="w-4 h-4 text-[#00CC88]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-[#4F9EF5]/10 border border-[#4F9EF5]/40 rounded-2xl p-6 relative">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#4F9EF5] text-white text-xs font-bold rounded-full">
-                PROMOTIONAL
-              </div>
-              <p className="text-[#4F9EF5] text-sm mb-2 font-medium">Monthly subscription</p>
-              <p className="text-3xl font-bold text-white mb-1">$99<span className="text-base font-normal text-white/60">/mo</span></p>
-              <p className="text-white/50 text-xs mb-4">While spots available</p>
-              <ul className="space-y-2 text-left">
-                {['Everything in Free', 'Weekly competitor updates', 'New gap alerts', 'Priority support', 'Unlimited re-analyses'].map((f, i) => (
-                  <li key={i} className="flex items-center gap-2 text-white/70 text-sm">
-                    <svg className="w-4 h-4 text-[#00CC88]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 opacity-70">
-              <p className="text-white/60 text-sm mb-2">Regular price</p>
-              <p className="text-3xl font-bold text-white/60 mb-1">$299<span className="text-base font-normal text-white/40">/mo</span></p>
-              <p className="text-white/40 text-xs mb-4">Future pricing</p>
-              <p className="text-white/50 text-sm text-left">Compare: Semrush charges $139/mo for generic tools. We deliver hyperlocal, AI-powered competitor intelligence tailored to your exact market.</p>
-            </div>
+          <div className="inline-block px-4 py-1.5 rounded-full bg-[#00CC88]/10 border border-[#00CC88]/30 text-[#00CC88] text-sm font-medium mb-6">
+            100% Free — No credit card ever
           </div>
+          <h2 className="text-3xl font-bold text-white mb-3">Everything in your free report</h2>
+          <p className="text-white/60 mb-10">Enter your URL, give us your email, and we send you the full analysis — no strings attached.</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+            {[
+              { icon: '📊', title: 'Overall competitive score', desc: 'See how you rank 0–100 vs local competitors' },
+              { icon: '🔍', title: 'Competitor deep-dive', desc: '4–5 real local competitors analysed in detail' },
+              { icon: '⚠️', title: 'Full gap analysis', desc: 'Every gap sorted Critical → High → Medium' },
+              { icon: '💡', title: 'Strategic recommendations', desc: '8–12 specific actions with cost and timeline' },
+              { icon: '🗓️', title: '90-day action roadmap', desc: 'Month-by-month plan you can start today' },
+              { icon: '📥', title: 'Downloadable HTML report', desc: 'Save or share your report anytime' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+                <span className="text-2xl">{item.icon}</span>
+                <div>
+                  <p className="text-white font-semibold text-sm">{item.title}</p>
+                  <p className="text-white/50 text-sm mt-0.5">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-white/40 text-sm mt-8">Just your email — that's all we need. No payment, no account, no commitment.</p>
         </div>
       </section>
 
@@ -1315,7 +1296,7 @@ export default function FunnelApp() {
               buttonText="Get My Free Analysis →"
             />
           </div>
-          <p className="text-white/40 text-sm mt-4">No credit card · Real data · Cancel anytime</p>
+          <p className="text-white/40 text-sm mt-4">Free · No credit card · Real competitor data · Takes 60 seconds</p>
         </div>
       </section>
 
