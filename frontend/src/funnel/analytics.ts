@@ -1,33 +1,29 @@
-// PostHog wrapper — gracefully no-ops if key not configured
+import posthog from 'posthog-js';
+
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let ph: any = null;
+let initialized = false;
 
-export async function initAnalytics() {
-  if (!POSTHOG_KEY) return;
-  try {
-    // Dynamic import — posthog-js is optional; gracefully no-ops if missing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const posthog = (await import('posthog-js' as any)).default;
-    posthog.init(POSTHOG_KEY, {
-      api_host: 'https://app.posthog.com',
-      capture_pageview: true,
-      autocapture: false,
-      persistence: 'localStorage',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      loaded: (p: any) => { if (import.meta.env.DEV) p.opt_out_capturing(); },
-    });
-    ph = posthog;
-  } catch {}
+export function initAnalytics() {
+  if (!POSTHOG_KEY || initialized) return;
+  posthog.init(POSTHOG_KEY, {
+    api_host: 'https://app.posthog.com',
+    capture_pageview: true,
+    autocapture: false,
+    persistence: 'localStorage',
+    loaded: (p) => { if (import.meta.env.DEV) p.opt_out_capturing(); },
+  });
+  initialized = true;
 }
 
 export function track(event: string, props: Record<string, unknown> = {}) {
-  try { ph?.capture(event, props); } catch {}
+  if (!initialized) return;
+  try { posthog.capture(event, props); } catch {}
 }
 
 export function identify(emailHash: string, props: Record<string, unknown> = {}) {
-  try { ph?.identify(emailHash, props); } catch {}
+  if (!initialized) return;
+  try { posthog.identify(emailHash, props); } catch {}
 }
 
 export function extractDomain(url: string): string {

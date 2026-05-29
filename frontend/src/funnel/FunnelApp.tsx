@@ -292,9 +292,8 @@ export default function FunnelApp() {
 
   // Init analytics on mount
   useEffect(() => {
-    initAnalytics().then(() => {
-      track('page_viewed', { page: 'funnel_landing' });
-    });
+    initAnalytics();
+    track('page_viewed', { page: 'funnel_landing' });
   }, []);
 
   // Loading step interval
