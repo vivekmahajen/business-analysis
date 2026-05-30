@@ -47,6 +47,145 @@ function starColor(r: number) {
 
 // ─── Teaser Report Modal ─────────────────────────────────────────────────────
 
+function downloadTeaserHtml(lead: AdminLead) {
+  const r = lead.teaserReport;
+  const findings: TeaserFinding[] = lead.teaserFindings || [];
+  const competitors = (lead.competitors || []) as Array<{ name: string; rating: number; reviewCount: number; keyAdvantage: string }>;
+
+  const trendIcon = TREND_ICONS[lead.ratingTrend] || '→';
+  const trendLabel = lead.ratingTrend?.charAt(0).toUpperCase() + lead.ratingTrend?.slice(1) || '';
+
+  const findingsHtml = findings.map(f => `
+    <div style="border:1px solid #fed7aa;background:#fff7ed;border-radius:12px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:11px;font-weight:700;color:#c2410c;background:#fed7aa;padding:2px 8px;border-radius:20px;">${f.code}</span>
+        <span style="font-weight:600;color:#1f2937;font-size:14px;">${f.title}</span>
+      </div>
+      <p style="color:#4b5563;font-size:14px;line-height:1.6;margin:0;">${f.finding}</p>
+    </div>`).join('');
+
+  const competitorsHtml = competitors.map(c => `
+    <div style="display:flex;align-items:flex-start;gap:12px;background:#f9fafb;border-radius:10px;padding:12px;margin-bottom:8px;">
+      <div style="width:40px;height:40px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#065f46;font-size:13px;flex-shrink:0;">${c.rating}★</div>
+      <div>
+        <div style="font-weight:600;color:#1f2937;font-size:14px;">${c.name}</div>
+        <div style="font-size:12px;color:#9ca3af;">${c.reviewCount} reviews</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:4px;font-style:italic;">${c.keyAdvantage}</div>
+      </div>
+    </div>`).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Lead Teaser Report — ${lead.businessName}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3f4f6; color: #111827; }
+  .page { max-width: 720px; margin: 40px auto; padding: 0 16px 60px; }
+  .header { background: linear-gradient(135deg, #1e40af, #3b82f6); border-radius: 16px; padding: 32px; color: #fff; margin-bottom: 24px; }
+  .section { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #9ca3af; margin-bottom: 12px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .metric { background: #f9fafb; border-radius: 10px; padding: 12px; text-align: center; }
+  .metric-val { font-size: 24px; font-weight: 900; }
+  .metric-sub { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+  .mono { background: #111827; color: #4ade80; font-family: monospace; font-size: 13px; padding: 12px 16px; border-radius: 8px; margin-bottom: 8px; }
+  .hook { background: #f9fafb; border-radius: 10px; padding: 16px; font-style: italic; color: #374151; font-size: 14px; line-height: 1.6; }
+  .cta-block { background: #2563eb; color: #fff; border-radius: 16px; padding: 24px; text-align: center; }
+  .cta-btn { display: inline-block; background: #fff; color: #1d4ed8; font-weight: 700; padding: 10px 28px; border-radius: 8px; font-size: 14px; margin-top: 12px; }
+  .locked { border: 2px dashed #e5e7eb; border-radius: 12px; padding: 20px; text-align: center; color: #9ca3af; }
+  .contact-row { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-bottom: 6px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 32px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.6);margin-bottom:4px;">Lead Teaser Report · SiteAnalyzer Pro</div>
+    <h1 style="font-size:28px;font-weight:900;margin-bottom:4px;">${lead.businessName}</h1>
+    <div style="color:rgba(255,255,255,.75);font-size:14px;">${lead.subCategory || lead.category} · ${lead.city}, ${lead.state}</div>
+  </div>
+
+  <div class="section">
+    <div class="label">Key Metrics</div>
+    <div class="metric-grid">
+      <div class="metric">
+        <div class="metric-val" style="color:#d97706;">${lead.rating}★</div>
+        <div class="metric-sub">${lead.reviewCount} reviews</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:${lead.ratingTrend === 'declining' ? '#ef4444' : lead.ratingTrend === 'improving' ? '#22c55e' : '#6b7280'};">${trendIcon} ${trendLabel}</div>
+        <div class="metric-sub">rating trend</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:#111827;">${lead.conversionScore}/10</div>
+        <div class="metric-sub">conversion score</div>
+      </div>
+    </div>
+  </div>
+
+  ${(lead.email || lead.phone || lead.website) ? `
+  <div class="section">
+    <div class="label">Contact Info</div>
+    ${lead.email ? `<div class="contact-row">✉ <a href="mailto:${lead.email}" style="color:#2563eb;">${lead.email}</a>${lead.ownerName ? ` — ${lead.ownerName}` : ''}</div>` : ''}
+    ${lead.phone ? `<div class="contact-row">☎ ${lead.phone}</div>` : ''}
+    ${lead.website ? `<div class="contact-row">🌐 <a href="${lead.website}" style="color:#2563eb;">${lead.website}</a></div>` : ''}
+  </div>` : ''}
+
+  ${r?.emailSubject ? `
+  <div class="section">
+    <div class="label">Email Subject Lines</div>
+    <div class="mono">${r.emailSubject}</div>
+    ${r.emailSubjectVariant ? `<div class="mono">${r.emailSubjectVariant}</div>` : ''}
+  </div>` : ''}
+
+  ${r?.openingHook ? `
+  <div class="section">
+    <div class="label">Opening Hook</div>
+    <div class="hook">"${r.openingHook}"</div>
+  </div>` : ''}
+
+  ${findings.length > 0 ? `
+  <div class="section">
+    <div class="label">Teaser Findings</div>
+    ${findingsHtml}
+  </div>` : ''}
+
+  <div class="locked">
+    🔒 ${(lead.fullFindings as unknown[])?.length || 9} more findings locked<br/>
+    <span style="font-size:12px;">Revenue gap · Top complaint script · Best upsell · Pricing gaps · 90-day roadmap</span>
+  </div>
+
+  ${r?.ctaHeadline ? `
+  <div class="cta-block" style="margin-top:16px;">
+    <div style="font-size:20px;font-weight:900;">${r.ctaHeadline}</div>
+    ${r.ctaBody ? `<div style="color:rgba(255,255,255,.8);font-size:14px;margin-top:8px;">${r.ctaBody}</div>` : ''}
+    ${r.ctaButtonText ? `<div class="cta-btn">${r.ctaButtonText}</div>` : ''}
+  </div>` : ''}
+
+  ${competitors.length > 0 ? `
+  <div class="section" style="margin-top:16px;">
+    <div class="label">Top Competitors</div>
+    ${competitorsHtml}
+  </div>` : ''}
+
+  <div class="footer">Generated by SiteAnalyzer Pro · Lead Discovery Engine · ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `teaser-${lead.businessName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function TeaserModal({ lead, onClose, onStatusChange }: {
   lead: AdminLead;
   onClose: () => void;
@@ -67,7 +206,15 @@ function TeaserModal({ lead, onClose, onStatusChange }: {
             <div className="font-syne font-bold text-lg text-gray-900">{lead.businessName}</div>
             <div className="text-sm text-gray-400">{lead.subCategory || lead.category} · {lead.city}, {lead.state}</div>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none flex-shrink-0">×</button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => downloadTeaserHtml(lead)}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+            >
+              ⬇ Download HTML
+            </button>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-2xl leading-none">×</button>
+          </div>
         </div>
 
         <div className="p-6 space-y-6">
