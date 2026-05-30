@@ -151,6 +151,8 @@ export interface GrowthAdvisorData {
   businessName: string;
   businessType: string;
   location: string;
+  growthPotentialScore?: number;
+  growthPotentialLabel?: string;
   currentProducts: string[];
   currentChannels: string[];
   currentPricing: string;

@@ -58,9 +58,9 @@ export default function DashboardScreen({
   const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
 
   const getEntryScore = (entry: AnalysisEntry): number | null => {
-    if (entry.reportType === 'growth') return null;
-    const d = entry.data as { overallScore?: unknown };
-    const raw = d.overallScore;
+    const scoreKey = entry.reportType === 'growth' ? 'growthPotentialScore' : 'overallScore';
+    const d = entry.data as unknown as Record<string, unknown>;
+    const raw = d[scoreKey];
     if (raw === undefined || raw === null) return null;
     const n = Number(raw);
     return Number.isFinite(n) ? Math.round(n) : null;
@@ -273,19 +273,21 @@ export default function DashboardScreen({
                       </div>
                     </div>
 
-                    {score !== null ? (
-                      <div className="text-right flex-shrink-0">
-                        <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>
-                          {score}
-                        </div>
-                        <div className="text-xs text-gray-400">{t.score.toLowerCase()}</div>
-                      </div>
-                    ) : (
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-syne font-bold text-sm text-emerald-600">Growth</div>
-                        <div className="text-xs text-gray-400">Advisor</div>
-                      </div>
-                    )}
+                    <div className="text-right flex-shrink-0">
+                      {score !== null ? (
+                        <>
+                          <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>{score}</div>
+                          <div className="text-xs text-gray-400">
+                            {entry.reportType === 'growth' ? 'growth score' : t.score.toLowerCase()}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-syne font-bold text-sm text-emerald-600">Growth</div>
+                          <div className="text-xs text-gray-400">Advisor</div>
+                        </>
+                      )}
+                    </div>
 
                     <div className="flex gap-2 flex-shrink-0">
                       <button

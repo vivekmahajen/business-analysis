@@ -84,6 +84,8 @@ Return ONLY a single valid JSON object with this structure:
   "businessName": "string",
   "businessType": "string",
   "location": "City, State",
+  "growthPotentialScore": 78,
+  "growthPotentialLabel": "Strong Growth Potential",
   "currentProducts": ["string"],
   "currentChannels": ["string"],
   "currentPricing": "string",
@@ -109,7 +111,10 @@ Return ONLY a single valid JSON object with this structure:
   },
   "totalEstimatedMonthlyRevenueRange": "$X,000 – $Y,000/mo (just the dollar range, no extra text)",
   "topQuickWin": "string"
-}`;
+}
+
+growthPotentialScore rules: integer 0–100 reflecting the business's untapped growth potential based on number of high-priority opportunities, gap vs competitors, and market trend strength. 80–100 = Exceptional, 65–79 = Strong, 50–64 = Moderate, below 50 = Limited.
+growthPotentialLabel: one of "Exceptional Growth Potential" | "Strong Growth Potential" | "Moderate Growth Potential" | "Limited Growth Potential"`;
 }
 
 export async function generateGrowthAnalysis(

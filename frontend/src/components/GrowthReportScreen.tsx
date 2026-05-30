@@ -212,10 +212,23 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
               <p className="text-emerald-300 text-xs mt-1">Generated {formatDate(generatedAt)}</p>
             </div>
             <div className="flex flex-col items-end gap-3 flex-shrink-0 max-w-xs">
+              {data.growthPotentialScore != null && (
+                <div className="text-right">
+                  <div className="text-xs text-emerald-300 uppercase tracking-wide mb-0.5">Growth Potential Score</div>
+                  <div className="flex items-baseline gap-1.5 justify-end">
+                    <span className="font-syne font-black text-4xl text-white leading-none">
+                      {Math.round(Number(data.growthPotentialScore))}
+                    </span>
+                    <span className="text-emerald-300 text-lg font-semibold">/100</span>
+                  </div>
+                  {data.growthPotentialLabel && (
+                    <div className="text-emerald-200 text-xs mt-0.5">{data.growthPotentialLabel}</div>
+                  )}
+                </div>
+              )}
               <div className="text-right">
                 <div className="text-xs text-emerald-300 uppercase tracking-wide mb-0.5">Total Revenue Opportunity</div>
                 <div className="font-syne font-black text-xl sm:text-2xl text-white leading-tight break-words">
-                  {/* Strip any parenthetical suffix the AI sometimes adds */}
                   {data.totalEstimatedMonthlyRevenueRange?.replace(/\s*\(.*\).*$/, '') || data.totalEstimatedMonthlyRevenueRange}
                 </div>
                 <div className="text-emerald-300 text-xs mt-0.5">estimated monthly range</div>
