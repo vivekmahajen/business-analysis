@@ -39,6 +39,8 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
   const [password, setPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const { t } = useI18n();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +65,93 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
       setLoading(false);
     }
   };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) { setError('Please enter your email address'); return; }
+    setError('');
+    setLoading(true);
+    try {
+      await api.forgotPassword(email);
+      setForgotSent(true);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (forgotMode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => { setForgotMode(false); setForgotSent(false); setError(''); }}
+              className="text-blue-300 hover:text-white text-sm flex items-center gap-1 transition-colors"
+            >
+              ← Back to sign in
+            </button>
+            <LanguagePicker variant="minimal" />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
+            {forgotSent ? (
+              <div className="text-center">
+                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h1 className="font-syne font-bold text-2xl text-gray-900 mb-2">Check your email</h1>
+                <p className="text-gray-500 text-sm mb-6">
+                  If an account exists for <strong>{email}</strong>, we've sent a password reset link. Check your inbox (and spam folder).
+                </p>
+                <button
+                  onClick={() => { setForgotMode(false); setForgotSent(false); setError(''); }}
+                  className="text-blue-600 hover:underline text-sm font-medium"
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <h1 className="font-syne font-bold text-2xl text-gray-900 mb-2">Forgot your password?</h1>
+                  <p className="text-gray-500 text-sm">Enter your email and we'll send you a reset link.</p>
+                </div>
+                <form onSubmit={handleForgot} className="space-y-4">
+                  <div>
+                    <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      required
+                      placeholder="you@company.com"
+                      autoComplete="email"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                    />
+                  </div>
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{error}</div>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-colors"
+                  >
+                    {loading ? 'Sending…' : 'Send reset link'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 flex items-center justify-center p-4">
@@ -121,7 +210,18 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">{t.passwordLabel}</label>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">{t.passwordLabel}</label>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={() => { setForgotMode(true); setError(''); }}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <input
                 id="password"
                 name="password"

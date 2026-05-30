@@ -12,6 +12,7 @@ import ReportScreen from './components/ReportScreen';
 import GrowthReportScreen from './components/GrowthReportScreen';
 import AdminLeadDiscoveryScreen from './components/AdminLeadDiscoveryScreen';
 import PricingScreen from './components/PricingScreen';
+import ResetPasswordScreen from './components/ResetPasswordScreen';
 import UpgradeModal from './components/UpgradeModal';
 
 function AppInner() {
@@ -35,9 +36,19 @@ function AppInner() {
   const [error, setError] = useState('');
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [resetToken, setResetToken] = useState<string | null>(null);
 
-  // Restore session from localStorage
+  // Detect password-reset token in URL before restoring session
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const rt = params.get('reset_token');
+    if (rt) {
+      setResetToken(rt);
+      setScreen('reset-password');
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+    // Restore session from localStorage
     const token = localStorage.getItem('sap_token');
     const storedUser = localStorage.getItem('sap_user');
     if (token && storedUser) {
@@ -241,6 +252,15 @@ function AppInner() {
       setError((e as Error).message);
     }
   }, []);
+
+  if (screen === 'reset-password' && resetToken) {
+    return (
+      <ResetPasswordScreen
+        token={resetToken}
+        onDone={() => { setResetToken(null); setAuthMode('login'); setScreen('auth'); }}
+      />
+    );
+  }
 
   if (screen === 'pricing') {
     return (

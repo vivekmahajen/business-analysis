@@ -168,8 +168,8 @@ export interface GrowthAdvisorData {
   topQuickWin: string;
 }
 
-export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads' | 'pricing';
-export type AuthMode = 'login' | 'register';
+export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads' | 'pricing' | 'reset-password';
+export type AuthMode = 'login' | 'register' | 'forgot';
 
 // Admin Lead Discovery types
 

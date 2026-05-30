@@ -26,8 +26,21 @@ model User {
   creditTxns         CreditTransaction[]
   subEvents          SubscriptionEvent[]
   creditPurchases    CreditPurchase[]
+  resetTokens        PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  token     String    @unique @db.VarChar(64)
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 
 model CreditTransaction {
