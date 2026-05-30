@@ -4,6 +4,8 @@ export interface User {
   email: string;
   isAdmin: boolean;
   createdAt: string;
+  plan?: string;
+  creditsRemaining?: number;
 }
 
 export interface Competitor {
@@ -164,7 +166,7 @@ export interface GrowthAdvisorData {
   topQuickWin: string;
 }
 
-export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads';
+export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads' | 'pricing';
 export type AuthMode = 'login' | 'register';
 
 // Admin Lead Discovery types

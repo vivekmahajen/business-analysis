@@ -9,17 +9,65 @@ datasource db {
 }
 
 model User {
-  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name       String          @db.VarChar(255)
-  email      String          @unique @db.VarChar(255)
-  password   String          @db.VarChar(255)
-  isAdmin    Boolean         @default(false) @map("is_admin")
-  createdAt  DateTime        @default(now()) @map("created_at")
-  reports    Report[]
-  payments   Payment[]
-  agreements UserAgreement[]
+  id                 String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String              @db.VarChar(255)
+  email              String              @unique @db.VarChar(255)
+  password           String              @db.VarChar(255)
+  isAdmin            Boolean             @default(false) @map("is_admin")
+  createdAt          DateTime            @default(now()) @map("created_at")
+  plan               String              @default("free") @db.VarChar(20)
+  creditsRemaining   Int                 @default(3) @map("credits_remaining")
+  stripeCustomerId   String?             @map("stripe_customer_id") @db.VarChar(255)
+  stripeSubId        String?             @map("stripe_sub_id") @db.VarChar(255)
+  planExpiresAt      DateTime?           @map("plan_expires_at")
+  reports            Report[]
+  payments           Payment[]
+  agreements         UserAgreement[]
+  creditTxns         CreditTransaction[]
+  subEvents          SubscriptionEvent[]
+  creditPurchases    CreditPurchase[]
 
   @@map("users")
+}
+
+model CreditTransaction {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  delta     Int
+  reason    String   @db.VarChar(100)
+  reportId  String?  @map("report_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("credit_transactions")
+}
+
+model SubscriptionEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  stripeEventId  String   @unique @map("stripe_event_id") @db.VarChar(255)
+  eventType      String   @map("event_type") @db.VarChar(100)
+  plan           String   @db.VarChar(20)
+  creditsGranted Int?     @map("credits_granted")
+  createdAt      DateTime @default(now()) @map("created_at")
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("subscription_events")
+}
+
+model CreditPurchase {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String   @map("user_id") @db.Uuid
+  stripeSessionId  String   @unique @map("stripe_session_id") @db.VarChar(255)
+  creditsPurchased Int      @map("credits_purchased")
+  amountCents      Int      @map("amount_cents")
+  createdAt        DateTime @default(now()) @map("created_at")
+  user             User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("credit_purchases")
 }
 
 model Report {

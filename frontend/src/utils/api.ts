@@ -6,6 +6,17 @@ function getToken(): string | null {
   return localStorage.getItem('sap_token');
 }
 
+export class CreditExhaustedError extends Error {
+  public readonly code = 'CREDITS_EXHAUSTED';
+  public readonly plan: string;
+  public readonly creditsRemaining: number;
+  constructor(data: { error: string; plan: string; creditsRemaining: number }) {
+    super(data.error);
+    this.plan = data.plan;
+    this.creditsRemaining = data.creditsRemaining;
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string, string> = {
@@ -22,8 +33,21 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(`Cannot reach API at ${url} — check VITE_API_URL and Railway status`);
   }
   const data = await res.json();
+  if (res.status === 402 && data.code === 'CREDITS_EXHAUSTED') {
+    throw new CreditExhaustedError(data);
+  }
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
+}
+
+export interface BillingStatus {
+  plan: string;
+  planName: string;
+  creditsRemaining: number;
+  creditsTotal: number;
+  unlimited: boolean;
+  hasSubscription: boolean;
+  planExpiresAt: string | null;
 }
 
 export const api = {
@@ -60,6 +84,19 @@ export const api = {
       body: JSON.stringify({ paymentIntentId, url, radius }),
     }),
 
+  generateReport: (url: string, radius: number) =>
+    request<unknown>('/reports/generate', {
+      method: 'POST',
+      body: JSON.stringify({ url, radius }),
+    }),
+
+  generateGrowthReport: (url: string, radius: number, city: string, state: string) =>
+    request<unknown>('/reports/generate-growth', {
+      method: 'POST',
+      body: JSON.stringify({ url, radius, city, state }),
+    }),
+
+  // kept for admin backwards-compat
   generateReportAdmin: (url: string, radius: number) =>
     request<unknown>('/reports/generate', {
       method: 'POST',
@@ -77,6 +114,31 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url, radius, city, state, reportType: 'growth' }),
     }),
+
+  // Billing
+  getBillingPlans: () =>
+    request<{ plans: unknown[]; addonPacks: unknown[] }>('/billing/plans'),
+
+  getBillingStatus: () =>
+    request<BillingStatus>('/billing/status'),
+
+  getBillingUsage: () =>
+    request<{ transactions: unknown[] }>('/billing/usage'),
+
+  createCheckout: (planId: string, interval: 'month' | 'year') =>
+    request<{ url: string }>('/billing/checkout', {
+      method: 'POST',
+      body: JSON.stringify({ planId, interval }),
+    }),
+
+  createAddonCheckout: (packId: string) =>
+    request<{ url: string }>('/billing/addon-checkout', {
+      method: 'POST',
+      body: JSON.stringify({ packId }),
+    }),
+
+  openBillingPortal: () =>
+    request<{ url: string }>('/billing/portal', { method: 'POST' }),
 
   // Admin Lead Discovery
   adminDiscover: (params: {

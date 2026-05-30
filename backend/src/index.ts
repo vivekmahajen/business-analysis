@@ -7,12 +7,14 @@ import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
+import billingRouter from './routes/billing';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Raw body for Stripe webhooks
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
 
 app.options('*', cors({ origin: true, credentials: true }));
 app.use(cors({ origin: true, credentials: true }));
@@ -39,7 +41,8 @@ app.use('/api/reports', reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin');
+app.use('/api/billing', billingRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -5,6 +5,7 @@ import LanguagePicker from './LanguagePicker';
 interface Props {
   onGetStarted: () => void;
   onLogin: () => void;
+  onPricing?: () => void;
 }
 
 function ScoreBar({ value, color }: { value: number; color: string }) {
@@ -201,7 +202,7 @@ function GrowthPreviewPanel() {
   );
 }
 
-export default function LandingScreen({ onGetStarted, onLogin }: Props) {
+export default function LandingScreen({ onGetStarted, onLogin, onPricing }: Props) {
   const [activeTab, setActiveTab] = useState<'competitive' | 'growth'>('competitive');
   const { t } = useI18n();
 
@@ -213,6 +214,11 @@ export default function LandingScreen({ onGetStarted, onLogin }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <LanguagePicker variant="minimal" />
+          {onPricing && (
+            <button onClick={onPricing} className="text-sm text-blue-200 hover:text-white transition-colors">
+              Pricing
+            </button>
+          )}
           <button onClick={onLogin} className="text-sm text-blue-200 hover:text-white transition-colors">
             {t.signIn}
           </button>

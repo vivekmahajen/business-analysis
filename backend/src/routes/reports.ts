@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';
 import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
+import { checkAndDeductCredit } from '../middleware/credits';
 import { generateAnalysis } from '../services/analysis';
 import { generateGrowthAnalysis } from '../services/growthAnalysis';
 import { upsertScore } from '../services/scoreCache';
@@ -83,8 +84,8 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
   }
 });
 
-// POST /api/reports/generate — admin-only: generate report without payment
-router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/reports/generate — authenticated users with credits (admins bypass credit check)
+router.post('/generate', requireAuth, checkAndDeductCredit, async (req: AuthRequest, res: Response): Promise<void> => {
   const { url, radius } = req.body;
   if (!url || !radius) {
     res.status(400).json({ error: 'URL and radius are required' });
@@ -128,8 +129,8 @@ router.post('/generate', requireAuth, requireAdmin, async (req: AuthRequest, res
   }
 });
 
-// POST /api/reports/generate-growth — admin-only: generate growth report without payment
-router.post('/generate-growth', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/reports/generate-growth — authenticated users with credits (admins bypass credit check)
+router.post('/generate-growth', requireAuth, checkAndDeductCredit, async (req: AuthRequest, res: Response): Promise<void> => {
   const { url, radius, city, state } = req.body;
   if (!url || !radius) {
     res.status(400).json({ error: 'URL and radius are required' });
