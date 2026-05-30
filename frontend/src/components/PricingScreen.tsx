@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
 
 interface Plan {
@@ -36,6 +36,8 @@ export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, curre
   const [interval, setInterval] = useState<'month' | 'year'>('month');
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+
+  useEffect(() => { window.scrollTo(0, 0); }, []);
 
   const plans: Plan[] = [
     {
