@@ -86,7 +86,7 @@ function AppInner() {
   useEffect(() => {
     if (user && screen === 'dashboard') {
       loadReports();
-      loadBillingStatus();
+      if (!user.isAdmin) loadBillingStatus();
     }
   }, [user, screen, loadReports, loadBillingStatus]);
 
@@ -292,13 +292,13 @@ function AppInner() {
           onDeleteReport={deleteReport}
           onLogout={handleLogout}
           onAdminLeads={user?.isAdmin ? () => setScreen('admin-leads') : undefined}
-          onPricing={() => setScreen('pricing')}
-          billingStatus={billingStatus}
-          onUpgrade={() => setShowUpgradeModal(true)}
+          onPricing={!user?.isAdmin ? () => setScreen('pricing') : undefined}
+          billingStatus={!user?.isAdmin ? billingStatus : null}
+          onUpgrade={!user?.isAdmin ? () => setShowUpgradeModal(true) : undefined}
           error={error}
           setError={setError}
         />
-        {showUpgradeModal && (
+        {showUpgradeModal && !user?.isAdmin && (
           <UpgradeModal
             currentPlan={billingStatus?.plan || 'free'}
             onClose={() => setShowUpgradeModal(false)}
