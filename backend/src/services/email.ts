@@ -1,17 +1,3 @@
-import nodemailer from 'nodemailer';
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST!,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER!,
-      pass: process.env.SMTP_PASS!,
-    },
-  });
-}
-
 export async function sendPasswordResetEmail(to: string, resetLink: string, name: string) {
   const from = process.env.SMTP_FROM || 'SiteAnalyzer Pro <noreply@siteanalyzerpro.com>';
 
@@ -21,7 +7,19 @@ export async function sendPasswordResetEmail(to: string, resetLink: string, name
     return;
   }
 
-  const transporter = createTransporter();
+  // Dynamic import keeps nodemailer out of the startup module graph
+  // so a missing package won't crash the server before routes are registered
+  const nodemailer = (await import('nodemailer')).default;
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
   await transporter.sendMail({
     from,
     to,
@@ -38,13 +36,11 @@ export async function sendPasswordResetEmail(to: string, resetLink: string, name
     <tr>
       <td align="center">
         <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);" cellpadding="0" cellspacing="0">
-          <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:32px 40px;text-align:center;">
-              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">SiteAnalyzer Pro</p>
+              <p style="margin:0;color:#ffffff;font-size:20px;font-weight:700;">SiteAnalyzer Pro</p>
             </td>
           </tr>
-          <!-- Body -->
           <tr>
             <td style="padding:40px;">
               <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;">Reset your password</p>
@@ -55,8 +51,7 @@ export async function sendPasswordResetEmail(to: string, resetLink: string, name
               <table cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
                 <tr>
                   <td style="background:#2563eb;border-radius:10px;">
-                    <a href="${resetLink}"
-                       style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;letter-spacing:0.1px;">
+                    <a href="${resetLink}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:600;text-decoration:none;">
                       Reset my password →
                     </a>
                   </td>
@@ -70,7 +65,6 @@ export async function sendPasswordResetEmail(to: string, resetLink: string, name
               </p>
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #f3f4f6;text-align:center;">
               <p style="margin:0;font-size:12px;color:#9ca3af;">
