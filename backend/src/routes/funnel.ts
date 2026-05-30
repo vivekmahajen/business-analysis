@@ -10,7 +10,6 @@ router.post('/analyze', async (req: Request, res: Response): Promise<void> => {
   const { url, radius = 25 } = req.body;
   if (!url) { res.status(400).json({ error: 'URL required' }); return; }
 
-  // Reject private IPs
   try {
     const parsed = new URL(url.startsWith('http') ? url : `https://${url}`);
     const h = parsed.hostname;
@@ -35,29 +34,32 @@ router.post('/gate', async (req: Request, res: Response): Promise<void> => {
   if (!email || !analyzedUrl) { res.status(400).json({ error: 'email and analyzedUrl required' }); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { res.status(400).json({ error: 'Invalid email' }); return; }
 
+  const overallScore = (reportData as Record<string, unknown>)?.overallScore as number | undefined;
+  const gaps = (reportData as Record<string, unknown>)?.gaps as Array<{ title: string }> | undefined;
+
+  // Always fire Mailchimp immediately — do not block on DB
+  addToMailchimp({
+    email, firstName, businessName, analyzedUrl,
+    overallScore,
+    topGap: gaps?.[0]?.title,
+    reportId: undefined,
+  }).catch(err => console.error('[funnel] mailchimp error:', err));
+
+  // Save to DB independently — failure here does not block the response
+  let leadId: string | undefined;
   try {
-    // Upsert lead
     const lead = await prisma.lead.upsert({
       where: { idx_leads_email_url: { email, analyzedUrl } },
       update: { firstName, businessName, reportData, updatedAt: new Date() },
       create: { email, firstName, businessName, analyzedUrl, reportData, utmSource, utmMedium, utmCampaign, referrer },
     });
-
-    // Add to Mailchimp async (don't block response)
-    const overallScore = (reportData as Record<string, unknown>)?.overallScore as number | undefined;
-    const gaps = (reportData as Record<string, unknown>)?.gaps as Array<{ title: string }> | undefined;
-    addToMailchimp({
-      email, firstName, businessName, analyzedUrl,
-      overallScore,
-      topGap: gaps?.[0]?.title,
-      reportId: lead.id,
-    }).catch(err => console.error('[funnel] mailchimp error:', err));
-
-    res.json({ success: true, leadId: lead.id, reportData });
+    leadId = lead.id;
+    console.log('[funnel] lead saved:', leadId);
   } catch (err) {
-    console.error('[funnel] gate error:', err);
-    res.status(500).json({ error: 'Failed to save lead' });
+    console.error('[funnel] DB save failed (non-fatal):', err);
   }
+
+  res.json({ success: true, leadId, reportData });
 });
 
 export default router;
