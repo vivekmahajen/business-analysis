@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { User, AnalysisEntry } from '../types';
 import { useI18n } from '../i18n';
+import { BillingStatus } from '../utils/api';
 import LanguagePicker from './LanguagePicker';
+import CreditIndicator from './CreditIndicator';
 
 interface Props {
   user: User;
@@ -16,6 +18,9 @@ interface Props {
   onDeleteReport: (id: string) => void;
   onLogout: () => void;
   onAdminLeads?: () => void;
+  onPricing?: () => void;
+  billingStatus?: BillingStatus | null;
+  onUpgrade?: () => void;
   error: string;
   setError: (e: string) => void;
 }
@@ -24,7 +29,8 @@ const RADII = [1, 5, 10, 25, 50, 100];
 
 export default function DashboardScreen({
   user, isAdmin, saved, urlInput, setUrlInput, radius, setRadius,
-  onSubmit, onViewReport, onDeleteReport, onLogout, onAdminLeads, error, setError,
+  onSubmit, onViewReport, onDeleteReport, onLogout, onAdminLeads, onPricing,
+  billingStatus, onUpgrade, error, setError,
 }: Props) {
   const [checking, setChecking] = useState(false);
   const [reportType, setReportType] = useState<'competitive' | 'growth'>('competitive');
@@ -73,7 +79,10 @@ export default function DashboardScreen({
           <div className="font-syne font-bold text-lg text-gray-900">
             SiteAnalyzer <span className="text-blue-600">Pro</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {billingStatus && onUpgrade && (
+              <CreditIndicator status={billingStatus} onUpgrade={onUpgrade} />
+            )}
             <span className="text-sm text-gray-500 hidden sm:block">{user.name}</span>
             {isAdmin && (
               <span className="bg-amber-100 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200">
@@ -81,6 +90,14 @@ export default function DashboardScreen({
               </span>
             )}
             <LanguagePicker variant="minimal" className="!bg-gray-100 !border-gray-200 !text-gray-600 hover:!bg-gray-200 hover:!text-gray-900" />
+            {onPricing && !isAdmin && (
+              <button
+                onClick={onPricing}
+                className="text-xs text-gray-500 hover:text-blue-600 font-medium transition-colors hidden sm:block"
+              >
+                Plans
+              </button>
+            )}
             {isAdmin && onAdminLeads && (
               <button
                 onClick={onAdminLeads}
@@ -175,8 +192,8 @@ export default function DashboardScreen({
                 {checking
                   ? t.checking
                   : reportType === 'growth'
-                    ? isAdmin ? `${t.salesGrowthAdvisor} — Free` : `${t.salesGrowthAdvisor} — $99/mo`
-                    : isAdmin ? `${t.competitiveAnalysis} — Free` : `${t.competitiveAnalysis} — $99/mo`
+                    ? `${t.salesGrowthAdvisor}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
+                    : `${t.competitiveAnalysis}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
                 }
               </button>
             </div>
@@ -210,8 +227,12 @@ export default function DashboardScreen({
 
           <p className="text-xs text-gray-400 mt-4">
             {isAdmin
-              ? 'Admin account · Reports generated free · No payment required'
-              : '$99/mo · 50 reports/month · $299/mo standard · Free retrieval of existing reports'}
+              ? 'Admin account · Unlimited reports · No credits required'
+              : billingStatus
+                ? billingStatus.unlimited
+                  ? `${billingStatus.planName} plan · Unlimited credits · Free retrieval of existing reports`
+                  : `${billingStatus.planName} plan · ${billingStatus.creditsRemaining} of ${billingStatus.creditsTotal} credits remaining · Free retrieval of existing reports`
+                : '1 credit = 1 analysis report · Free retrieval of existing reports'}
           </p>
         </div>
 

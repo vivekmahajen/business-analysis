@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, AnalysisData, GrowthAdvisorData, AnalysisEntry, Screen, AuthMode } from './types';
-import { api } from './utils/api';
+import { api, CreditExhaustedError, BillingStatus } from './utils/api';
 import { LanguageProvider } from './i18n';
 import LandingScreen from './components/LandingScreen';
 import AuthScreen from './components/AuthScreen';
@@ -11,6 +11,8 @@ import GeneratingScreen from './components/GeneratingScreen';
 import ReportScreen from './components/ReportScreen';
 import GrowthReportScreen from './components/GrowthReportScreen';
 import AdminLeadDiscoveryScreen from './components/AdminLeadDiscoveryScreen';
+import PricingScreen from './components/PricingScreen';
+import UpgradeModal from './components/UpgradeModal';
 
 function AppInner() {
   const [screen, setScreen] = useState<Screen>('landing');
@@ -31,6 +33,8 @@ function AppInner() {
   const [pendCity, setPendCity] = useState('');
   const [pendState, setPendState] = useState('');
   const [error, setError] = useState('');
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Restore session from localStorage
   useEffect(() => {
@@ -47,6 +51,29 @@ function AppInner() {
     }
   }, []);
 
+  // Handle billing success/cancelled query params on return from Stripe
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const billing = params.get('billing');
+    if (billing === 'success' || billing === 'addon_success') {
+      // Clean the URL and refresh billing status
+      window.history.replaceState({}, '', window.location.pathname);
+      if (user) loadBillingStatus();
+    } else if (billing === 'cancelled') {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadBillingStatus = useCallback(async () => {
+    try {
+      const status = await api.getBillingStatus();
+      setBillingStatus(status);
+    } catch {
+      // non-fatal
+    }
+  }, []);
+
   const loadReports = useCallback(async () => {
     try {
       const reports = await api.getReports() as AnalysisEntry[];
@@ -57,8 +84,11 @@ function AppInner() {
   }, []);
 
   useEffect(() => {
-    if (user && screen === 'dashboard') loadReports();
-  }, [user, screen, loadReports]);
+    if (user && screen === 'dashboard') {
+      loadReports();
+      loadBillingStatus();
+    }
+  }, [user, screen, loadReports, loadBillingStatus]);
 
   const handleAuth = useCallback((u: User, token: string) => {
     localStorage.setItem('sap_token', token);
@@ -75,6 +105,7 @@ function AppInner() {
     setReport(null);
     setGrowthReport(null);
     setSaved([]);
+    setBillingStatus(null);
     setScreen('landing');
   }, []);
 
@@ -99,18 +130,13 @@ function AppInner() {
       } else {
         setPendUrl(url);
         setPendRad(rad);
-        // Admins skip payment entirely
-        if (user?.isAdmin) {
-          startGeneration(url, rad, undefined, reportType, city || '', state || '');
-        } else {
-          setScreen('payment');
-        }
+        startGeneration(url, rad, undefined, reportType, city || '', state || '');
       }
     } catch (e) {
       setError((e as Error).message);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, []);
 
   const startGeneration = useCallback(async (
     url: string,
@@ -131,7 +157,7 @@ function AppInner() {
 
     const STEPS = 7;
     let currentStep = 0;
-    const interval = setInterval(() => {
+    const intervalId = setInterval(() => {
       if (currentStep < STEPS - 1) {
         setDone(prev => [...prev, currentStep]);
         currentStep++;
@@ -144,13 +170,16 @@ function AppInner() {
       if (paymentIntentId) {
         entry = await api.confirmPayment(paymentIntentId, url, rad) as AnalysisEntry;
       } else if (effectiveReportType === 'growth') {
-        entry = await api.generateGrowthReportAdmin(url, rad, effectiveCity, effectiveState) as AnalysisEntry;
+        entry = await api.generateGrowthReport(url, rad, effectiveCity, effectiveState) as AnalysisEntry;
       } else {
-        entry = await api.generateReportAdmin(url, rad) as AnalysisEntry;
+        entry = await api.generateReport(url, rad) as AnalysisEntry;
       }
-      clearInterval(interval);
+      clearInterval(intervalId);
       setDone(Array.from({ length: STEPS }, (_, i) => i));
       setStep(STEPS - 1);
+
+      // Refresh billing status after successful generation
+      loadBillingStatus();
 
       setTimeout(() => {
         const entryReportType = (entry as AnalysisEntry & { reportType?: string }).reportType as 'competitive' | 'growth' | undefined;
@@ -171,11 +200,16 @@ function AppInner() {
         loadReports();
       }, 500);
     } catch (e) {
-      clearInterval(interval);
+      clearInterval(intervalId);
+      if (e instanceof CreditExhaustedError) {
+        setShowUpgradeModal(true);
+        setScreen('dashboard');
+        return;
+      }
       setError((e as Error).message);
       setScreen(paymentIntentId ? 'payment' : 'dashboard');
     }
-  }, [loadReports, pendReportType, pendCity, pendState]);
+  }, [loadReports, loadBillingStatus, pendReportType, pendCity, pendState]);
 
   const handlePaymentSuccess = useCallback(async (paymentIntentId: string) => {
     await startGeneration(pendUrl, pendRad, paymentIntentId);
@@ -208,11 +242,23 @@ function AppInner() {
     }
   }, []);
 
+  if (screen === 'pricing') {
+    return (
+      <PricingScreen
+        onBack={() => setScreen(user ? 'dashboard' : 'landing')}
+        isLoggedIn={!!user}
+        onLoginPrompt={() => { setAuthMode('register'); setScreen('auth'); }}
+        currentPlan={billingStatus?.plan}
+      />
+    );
+  }
+
   if (screen === 'landing') {
     return (
       <LandingScreen
         onGetStarted={() => { setAuthMode('register'); setScreen('auth'); }}
         onLogin={() => { setAuthMode('login'); setScreen('auth'); }}
+        onPricing={() => setScreen('pricing')}
       />
     );
   }
@@ -232,22 +278,34 @@ function AppInner() {
 
   if (screen === 'dashboard') {
     return (
-      <DashboardScreen
-        user={user!}
-        isAdmin={user?.isAdmin ?? false}
-        saved={saved}
-        urlInput={urlInput}
-        setUrlInput={setUrlInput}
-        radius={radius}
-        setRadius={setRadius}
-        onSubmit={handleUrlSubmit}
-        onViewReport={viewReport}
-        onDeleteReport={deleteReport}
-        onLogout={handleLogout}
-        onAdminLeads={user?.isAdmin ? () => setScreen('admin-leads') : undefined}
-        error={error}
-        setError={setError}
-      />
+      <>
+        <DashboardScreen
+          user={user!}
+          isAdmin={user?.isAdmin ?? false}
+          saved={saved}
+          urlInput={urlInput}
+          setUrlInput={setUrlInput}
+          radius={radius}
+          setRadius={setRadius}
+          onSubmit={handleUrlSubmit}
+          onViewReport={viewReport}
+          onDeleteReport={deleteReport}
+          onLogout={handleLogout}
+          onAdminLeads={user?.isAdmin ? () => setScreen('admin-leads') : undefined}
+          onPricing={() => setScreen('pricing')}
+          billingStatus={billingStatus}
+          onUpgrade={() => setShowUpgradeModal(true)}
+          error={error}
+          setError={setError}
+        />
+        {showUpgradeModal && (
+          <UpgradeModal
+            currentPlan={billingStatus?.plan || 'free'}
+            onClose={() => setShowUpgradeModal(false)}
+            onViewPricing={() => { setShowUpgradeModal(false); setScreen('pricing'); }}
+          />
+        )}
+      </>
     );
   }
 
@@ -261,13 +319,7 @@ function AppInner() {
         entry={foundRep!}
         isAdmin={user?.isAdmin ?? false}
         onViewFree={() => viewReport(foundRep!)}
-        onGenerateNew={() => {
-          if (user?.isAdmin) {
-            startGeneration(pendUrl, pendRad, undefined, pendReportType, pendCity, pendState);
-          } else {
-            setScreen('payment');
-          }
-        }}
+        onGenerateNew={() => startGeneration(pendUrl, pendRad, undefined, pendReportType, pendCity, pendState)}
         onBack={() => setScreen('dashboard')}
       />
     );
