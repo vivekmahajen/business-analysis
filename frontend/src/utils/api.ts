@@ -32,12 +32,18 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   } catch (err) {
     throw new Error(`Cannot reach API at ${url} — check VITE_API_URL and Railway status`);
   }
-  const data = await res.json();
-  if (res.status === 402 && data.code === 'CREDITS_EXHAUSTED') {
-    throw new CreditExhaustedError(data);
+  const text = await res.text();
+  let data: Record<string, unknown> = {};
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(res.ok ? 'Unexpected server response' : `Server error ${res.status} — please try again`);
   }
-  if (!res.ok) throw new Error(data.error || 'Request failed');
-  return data;
+  if (res.status === 402 && data.code === 'CREDITS_EXHAUSTED') {
+    throw new CreditExhaustedError(data as { error: string; plan: string; creditsRemaining: number });
+  }
+  if (!res.ok) throw new Error((data.error as string) || 'Request failed');
+  return data as T;
 }
 
 export interface BillingStatus {
