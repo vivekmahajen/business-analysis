@@ -37,6 +37,7 @@ export async function addToMailchimp(lead: MailchimpLead): Promise<void> {
         SCORE:    String(lead.overallScore || ''),
         TOPGAP:   lead.topGap || '',
         REPORTID: lead.reportId || '',
+        ADDRESS:  { addr1: 'N/A', city: 'N/A', state: 'N/A', zip: '00000', country: 'US' },
       },
     }),
   });
