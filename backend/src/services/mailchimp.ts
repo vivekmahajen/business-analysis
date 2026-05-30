@@ -41,16 +41,18 @@ export async function addToMailchimp(lead: MailchimpLead): Promise<void> {
       },
     }),
   });
+  const upsertBody = await upsertRes.text();
   if (!upsertRes.ok) {
-    const err = await upsertRes.text();
-    console.error('[mailchimp] Upsert failed:', err);
+    console.error('[mailchimp] Upsert failed:', upsertBody);
     return;
   }
+  console.log('[mailchimp] Upsert status:', upsertRes.status, '| email:', lead.email, '| audience:', MAILCHIMP_AUDIENCE_ID);
 
   // Add drip trigger tag
-  await fetch(`${baseUrl}/lists/${MAILCHIMP_AUDIENCE_ID}/members/${subscriberHash}/tags`, {
+  const tagRes = await fetch(`${baseUrl}/lists/${MAILCHIMP_AUDIENCE_ID}/members/${subscriberHash}/tags`, {
     method: 'POST',
     headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ tags: [{ name: 'siteanalyzer-lead', status: 'active' }, { name: 'drip-day-0', status: 'active' }] }),
   });
+  console.log('[mailchimp] Tags status:', tagRes.status);
 }
