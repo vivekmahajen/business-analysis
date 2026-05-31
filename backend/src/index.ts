@@ -13,6 +13,7 @@ import llmVisibilityRouter from './routes/llm-visibility';
 import v1Router from './routes/v1';
 import developerRouter from './routes/developer';
 import termsRouter from './routes/terms';
+import docsRouter from './routes/docs';
 import { startWebhookWorker } from './services/webhookDelivery';
 
 const app = express();
@@ -52,7 +53,8 @@ app.use('/api/llm', llmVisibilityRouter);
 app.use('/api/v1', v1Router);
 app.use('/api/developer', developerRouter);
 app.use('/terms', termsRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing, /api/llm, /api/v1, /api/developer');
+app.use('/docs', docsRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing, /api/llm, /api/v1, /api/developer, /docs');
 
 // Serve OpenAPI spec
 const openapiPath = path.join(__dirname, '..', '..', '..', 'openapi.yaml');
