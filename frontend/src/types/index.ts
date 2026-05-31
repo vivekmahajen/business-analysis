@@ -239,6 +239,59 @@ export interface AdminLead {
   discoveredAt: string;
 }
 
+// LLM Visibility (AISPS) types
+
+export interface LlmAuditResult {
+  id: string;
+  provider: string;
+  queryCategory: string;
+  query: string;
+  mentioned: boolean;
+  mentionRank: number | null;
+  mentionContext: string | null;
+}
+
+export interface ScoreBreakdown {
+  overallScore: number;
+  providers: Record<string, { score: number; mentioned: number; total: number }>;
+  interpretation: string;
+  label: string;
+}
+
+export interface LlmAudit {
+  id: string;
+  businessName: string;
+  businessUrl: string | null;
+  city: string;
+  state: string;
+  category: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  overallScore: number | null;
+  scoreBreakdown: ScoreBreakdown | null;
+  totalQueries: number;
+  mentionCount: number;
+  errorMessage: string | null;
+  createdAt: string;
+  completedAt: string | null;
+  results: LlmAuditResult[];
+}
+
+export interface LlmAuditSummary {
+  id: string;
+  businessName: string;
+  businessUrl: string | null;
+  city: string;
+  state: string;
+  category: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  overallScore: number | null;
+  scoreBreakdown: ScoreBreakdown | null;
+  totalQueries: number;
+  mentionCount: number;
+  createdAt: string;
+  completedAt: string | null;
+}
+
 export interface LeadDiscoveryResult {
   cached: boolean;
   totalFound: number;

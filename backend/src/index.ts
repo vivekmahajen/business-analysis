@@ -8,6 +8,7 @@ import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
 import billingRouter from './routes/billing';
+import llmVisibilityRouter from './routes/llm-visibility';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,7 +43,8 @@ app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
-console.log('Routes registered: /api/auth (login,register,forgot-password,reset-password), /api/reports, /api/payments, /api/admin, /api/billing');
+app.use('/api/llm', llmVisibilityRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing, /api/llm');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

@@ -27,6 +27,7 @@ model User {
   subEvents          SubscriptionEvent[]
   creditPurchases    CreditPurchase[]
   resetTokens        PasswordResetToken[]
+  llmAudits          LlmAudit[]
 
   @@map("users")
 }
@@ -134,6 +135,58 @@ model Payment {
   user         User     @relation(fields: [userId], references: [id])
 
   @@map("payments")
+}
+
+model LlmAudit {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String           @map("user_id") @db.Uuid
+  businessName   String           @map("business_name")
+  businessUrl    String?          @map("business_url")
+  city           String
+  state          String
+  category       String
+  status         String           @default("pending")
+  overallScore   Int?             @map("overall_score")
+  scoreBreakdown Json?            @map("score_breakdown")
+  totalQueries   Int              @default(0) @map("total_queries")
+  mentionCount   Int              @default(0) @map("mention_count")
+  errorMessage   String?          @map("error_message")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  completedAt    DateTime?        @map("completed_at")
+  user           User             @relation(fields: [userId], references: [id])
+  results        LlmAuditResult[]
+
+  @@index([userId])
+  @@map("llm_audits")
+}
+
+model LlmAuditResult {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  auditId        String   @map("audit_id") @db.Uuid
+  provider       String   @db.VarChar(50)
+  queryCategory  String   @map("query_category") @db.VarChar(100)
+  query          String   @db.Text
+  responseText   String   @map("response_text") @db.Text
+  mentioned      Boolean
+  mentionRank    Int?     @map("mention_rank")
+  mentionContext String?  @map("mention_context") @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  audit          LlmAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@map("llm_audit_results")
+}
+
+model LlmWaitlist {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String   @unique @db.VarChar(255)
+  name        String?  @db.VarChar(255)
+  businessUrl String?  @map("business_url") @db.VarChar(2048)
+  city        String?  @db.VarChar(100)
+  state       String?  @db.VarChar(100)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("llm_waitlist")
 }
 
 model AdminLead {

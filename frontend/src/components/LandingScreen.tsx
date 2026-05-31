@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useI18n } from '../i18n';
 import LanguagePicker from './LanguagePicker';
+import AISPSWaitlistSection from './AISPSWaitlistSection';
 
 interface Props {
   onGetStarted: () => void;
@@ -327,6 +328,9 @@ export default function LandingScreen({ onGetStarted, onLogin, onPricing }: Prop
           </div>
         </div>
       </div>
+
+      {/* AISPS Beta Waitlist */}
+      <AISPSWaitlistSection />
 
       {/* Pricing CTA Section */}
       <div className="max-w-5xl mx-auto px-8 py-20 text-center">

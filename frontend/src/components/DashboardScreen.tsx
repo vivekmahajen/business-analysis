@@ -4,6 +4,7 @@ import { useI18n } from '../i18n';
 import { BillingStatus } from '../utils/api';
 import LanguagePicker from './LanguagePicker';
 import CreditIndicator from './CreditIndicator';
+import AISPSCard from './AISPSCard';
 
 interface Props {
   user: User;
@@ -235,6 +236,9 @@ export default function DashboardScreen({
                 : '1 credit = 1 analysis report · Free retrieval of existing reports'}
           </p>
         </div>
+
+        {/* AI Visibility Score */}
+        {!isAdmin && <AISPSCard />}
 
         {/* Saved Reports */}
         <div>

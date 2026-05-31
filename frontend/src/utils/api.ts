@@ -205,4 +205,29 @@ export const api = {
 
   adminGetCities: (category: string, state: string) =>
     request<string[]>(`/admin/cities/${encodeURIComponent(category)}/${encodeURIComponent(state)}`),
+
+  adminGetLlmWaitlist: () =>
+    request<{ entries: unknown[]; total: number }>('/admin/llm-waitlist'),
+
+  // LLM Visibility (AISPS)
+  startLlmAudit: (params: { businessName: string; businessUrl?: string; city: string; state: string; category: string }) =>
+    request<{ auditId: string; status: string; cached: boolean }>('/llm/audit', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  getLlmAudit: (id: string) =>
+    request<import('../types').LlmAudit>(`/llm/audit/${id}`),
+
+  getLlmAudits: () =>
+    request<{ audits: import('../types').LlmAuditSummary[] }>('/llm/audits'),
+
+  joinLlmWaitlist: (params: { email: string; name?: string; businessUrl?: string; city?: string; state?: string }) =>
+    request<{ message: string; alreadyJoined: boolean }>('/llm/waitlist', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  getLlmWaitlistCount: () =>
+    request<{ count: number }>('/llm/waitlist-count'),
 };

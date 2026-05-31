@@ -228,4 +228,16 @@ router.get('/cities/:category/:state', async (req, res: Response): Promise<void>
   }
 });
 
+// GET /api/admin/llm-waitlist — List AISPS beta waitlist entries
+router.get('/llm-waitlist', async (_req, res: Response): Promise<void> => {
+  try {
+    const entries = await prisma.llmWaitlist.findMany({
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ entries, total: entries.length });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch waitlist' });
+  }
+});
+
 export default router;
