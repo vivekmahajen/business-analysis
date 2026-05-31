@@ -236,7 +236,7 @@ export async function runLlmAudit(auditId: string): Promise<void> {
       data: {
         status: 'completed',
         overallScore: scoreData.overallScore,
-        scoreBreakdown: scoreData as unknown as Record<string, unknown>,
+        scoreBreakdown: JSON.parse(JSON.stringify(scoreData)),
         totalQueries: allResults.length,
         mentionCount,
         completedAt: new Date(),
