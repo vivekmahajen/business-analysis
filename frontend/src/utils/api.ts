@@ -33,6 +33,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(`Cannot reach API at ${url} — check VITE_API_URL and Railway status`);
   }
   const text = await res.text();
+  console.log(`[api] ${options.method || 'GET'} ${url} → ${res.status}`, text.slice(0, 200));
   let data: Record<string, unknown> = {};
   try {
     data = JSON.parse(text);

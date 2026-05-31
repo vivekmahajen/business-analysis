@@ -118,6 +118,7 @@ router.post('/forgot-password', async (req: Request, res: Response): Promise<voi
 });
 
 router.post('/reset-password', async (req: Request, res: Response): Promise<void> => {
+  console.log('[reset-password] handler called, body keys:', Object.keys(req.body || {}));
   const { token, password } = req.body;
   if (!token || !password) {
     res.status(400).json({ error: 'Token and password are required' });
