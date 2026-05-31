@@ -236,7 +236,8 @@ export async function runLlmAudit(auditId: string): Promise<void> {
       data: {
         status: 'completed',
         overallScore: scoreData.overallScore,
-        scoreBreakdown: JSON.parse(JSON.stringify(scoreData)),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        scoreBreakdown: JSON.parse(JSON.stringify(scoreData)) as any,
         totalQueries: allResults.length,
         mentionCount,
         completedAt: new Date(),
