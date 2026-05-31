@@ -101,7 +101,7 @@ router.post('/discover', async (req: AuthRequest, res: Response): Promise<void> 
 
     const savedLeads = await Promise.all(
       businesses.map(biz =>
-        prisma.adminLead.create({ data: mapBizToLead(biz, req.userId!) }).catch(err => {
+        prisma.adminLead.create({ data: mapBizToLead(biz, req.userId!) }).catch((err: unknown) => {
           console.error('[admin] Failed to save lead:', err);
           return null;
         }),
@@ -207,7 +207,7 @@ router.get('/states/:category', async (req, res: Response): Promise<void> => {
       distinct: ['state'],
       orderBy: { state: 'asc' },
     });
-    res.json(rows.map(r => r.state));
+    res.json(rows.map((r: { state: string }) => r.state));
   } catch {
     res.status(500).json({ error: 'Failed to fetch states' });
   }
@@ -222,7 +222,7 @@ router.get('/cities/:category/:state', async (req, res: Response): Promise<void>
       distinct: ['city'],
       orderBy: { city: 'asc' },
     });
-    res.json(rows.map(r => r.city));
+    res.json(rows.map((r: { city: string }) => r.city));
   } catch {
     res.status(500).json({ error: 'Failed to fetch cities' });
   }
