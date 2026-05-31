@@ -47,9 +47,11 @@ export default function GeneratingScreen({ url, radius, step, done }: Props) {
         {/* Progress bar + percentage */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-blue-300 font-medium">Overall Progress</span>
             <span className={`text-2xl font-syne font-black tabular-nums ${colors.text}`}>
               {pct}%
+            </span>
+            <span className="text-sm text-blue-300 font-medium">
+              {done.length} of {STEPS.length} steps complete
             </span>
           </div>
 
@@ -59,18 +61,6 @@ export default function GeneratingScreen({ url, radius, step, done }: Props) {
               className={`h-full rounded-full transition-all duration-700 ease-out ${colors.bar}`}
               style={{ width: `${pct}%` }}
             />
-          </div>
-
-          {/* Step counter */}
-          <div className="flex justify-between mt-1.5">
-            <span className="text-xs text-white/30">
-              {done.length} of {STEPS.length} steps complete
-            </span>
-            {!isComplete && (
-              <span className="text-xs text-white/30">
-                {STEPS.length - done.length} remaining
-              </span>
-            )}
           </div>
         </div>
 
