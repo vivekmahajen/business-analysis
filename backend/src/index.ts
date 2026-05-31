@@ -42,7 +42,7 @@ app.use('/api/payments/confirm', analysisLimiter);
 app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing');
+console.log('Routes registered: /api/auth (login,register,forgot-password,reset-password), /api/reports, /api/payments, /api/admin, /api/billing');
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
