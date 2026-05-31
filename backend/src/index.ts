@@ -3,12 +3,16 @@ import express from 'express';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import path from 'path';
+import fs from 'fs';
 import authRouter from './routes/auth';
 import reportsRouter from './routes/reports';
 import paymentsRouter from './routes/payments';
 import adminRouter from './routes/admin';
 import billingRouter from './routes/billing';
 import llmVisibilityRouter from './routes/llm-visibility';
+import v1Router from './routes/v1';
+import developerRouter from './routes/developer';
+import { startWebhookWorker } from './services/webhookDelivery';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -44,7 +48,22 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/billing', billingRouter);
 app.use('/api/llm', llmVisibilityRouter);
-console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing, /api/llm');
+app.use('/api/v1', v1Router);
+app.use('/api/developer', developerRouter);
+console.log('Routes registered: /api/auth, /api/reports, /api/payments, /api/admin, /api/billing, /api/llm, /api/v1, /api/developer');
+
+// Serve OpenAPI spec
+const openapiPath = path.join(__dirname, '..', '..', '..', 'openapi.yaml');
+app.get('/api/openapi.yaml', (_req, res) => {
+  if (fs.existsSync(openapiPath)) {
+    res.setHeader('Content-Type', 'text/yaml');
+    res.sendFile(openapiPath);
+  } else {
+    res.status(404).json({ error: 'OpenAPI spec not found' });
+  }
+});
+
+startWebhookWorker();
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

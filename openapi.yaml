@@ -1,0 +1,720 @@
+openapi: 3.1.0
+info:
+  title: SiteAnalyzer Pro API
+  version: 1.0.0
+  description: |
+    AI-powered competitive intelligence for any business website.
+
+    With a single API call, analyze any business URL against local competitors,
+    get a scored gap analysis, and receive a prioritized 90-day action roadmap.
+
+    **Base URL:** `https://siteanalyzer-backend-production-b23c.up.railway.app/api/v1`
+
+    **Authentication:** Pass your API key in the `X-API-Key` header.
+    Get a free key (100 calls/month) at https://siteanalyzerpro.com/developers
+
+    **Typical flow:**
+    1. `POST /analyze` → returns `jobId`
+    2. `GET /jobs/{jobId}` → poll every 5–10s until `status = "completed"`
+    3. Use `result` from the completed job response
+
+  contact:
+    name: SiteAnalyzer Pro Support
+    email: api@siteanalyzerpro.com
+  license:
+    name: Commercial API License
+
+servers:
+  - url: https://siteanalyzer-backend-production-b23c.up.railway.app/api/v1
+    description: Production
+
+security:
+  - ApiKeyAuth: []
+
+tags:
+  - name: Analysis
+    description: Submit URLs for AI competitive analysis
+  - name: Jobs
+    description: Poll async job status
+  - name: Reports
+    description: Retrieve and manage completed reports
+  - name: LLM Visibility
+    description: AI Search Presence Score (AISPS)
+  - name: Account
+    description: Usage and quota
+  - name: Webhooks
+    description: Event delivery configuration
+
+paths:
+  /analyze:
+    post:
+      operationId: analyzeWebsite
+      summary: Submit a URL for competitive analysis
+      tags: [Analysis]
+      description: |
+        Submits a business URL for AI-powered competitive analysis.
+
+        **Async mode (default):** Returns a `jobId` immediately. Poll
+        `GET /jobs/{jobId}` every 5–10 seconds until `status = "completed"`.
+
+        **Sync mode:** Holds the connection open (up to 120s) and returns
+        the full report directly. Useful for testing; use async in production.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url:
+                  type: string
+                  description: Business website URL (must be https://)
+                  example: https://mamamiapizza.com
+                radius:
+                  type: integer
+                  description: Competitor search radius in miles (1–100)
+                  default: 25
+                  minimum: 1
+                  maximum: 100
+                responseMode:
+                  type: string
+                  enum: [async, sync]
+                  default: async
+                  description: async returns jobId; sync waits for full result
+                webhookUrl:
+                  type: string
+                  description: HTTPS URL to POST the completed analysis to
+                  example: https://yourapp.com/webhooks/siteanalyzer
+                options:
+                  type: object
+                  properties:
+                    reportDepth:
+                      type: string
+                      enum: [preview, standard, deep]
+                      default: standard
+                      description: preview=3 metrics, standard=full 15, deep=15+AISPS
+                metadata:
+                  type: object
+                  description: Custom key-value pairs echoed in the response
+                  additionalProperties:
+                    type: string
+            examples:
+              async:
+                summary: Async (recommended)
+                value:
+                  url: https://mamamiapizza.com
+                  radius: 10
+                  responseMode: async
+              sync:
+                summary: Sync (testing only)
+                value:
+                  url: https://mamamiapizza.com
+                  radius: 10
+                  responseMode: sync
+      responses:
+        '202':
+          description: Job queued (async mode)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    example: queued
+                  estimatedCompletionSeconds:
+                    type: integer
+                    example: 75
+                  createdAt:
+                    type: string
+                    format: date-time
+        '200':
+          description: Analysis complete (sync mode)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisReport'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJobStatus
+      summary: Poll analysis job status
+      tags: [Jobs]
+      description: |
+        Poll every 5–10 seconds until `status` is `completed` or `failed`.
+        When `completed`, the full report is in the `result` field.
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                    enum: [queued, processing, completed, failed]
+                  progress:
+                    type: object
+                    properties:
+                      currentStep:
+                        type: string
+                        example: scanning_website
+                      percentComplete:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                  result:
+                    $ref: '#/components/schemas/AnalysisReport'
+                    description: Present only when status = completed
+                  error:
+                    type: object
+                    description: Present only when status = failed
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+                  createdAt:
+                    type: string
+                    format: date-time
+                  completedAt:
+                    type: string
+                    format: date-time
+                    nullable: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reports:
+    get:
+      operationId: listReports
+      summary: List analysis reports for this API key
+      tags: [Reports]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Report list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisReport'
+
+  /reports/{reportId}:
+    get:
+      operationId: getReport
+      summary: Get a specific analysis report
+      tags: [Reports]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisReport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /reports/{reportId}/refresh:
+    post:
+      operationId: refreshReport
+      summary: Re-run analysis for an existing report URL
+      tags: [Reports]
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '202':
+          description: Refresh job queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
+                  originalReportId:
+                    type: string
+                    format: uuid
+                  estimatedCompletionSeconds:
+                    type: integer
+
+  /llm-visibility/{reportId}:
+    get:
+      operationId: getLLMVisibility
+      summary: Get AI Search Presence Score (AISPS)
+      tags: [LLM Visibility]
+      description: Returns how often the business appears in ChatGPT and Perplexity results. Requires Professional plan.
+      parameters:
+        - name: reportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: AISPS score
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reportId:
+                    type: string
+                  businessName:
+                    type: string
+                  aisps:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                  scoreBreakdown:
+                    type: object
+                  mentionCount:
+                    type: integer
+                  totalQueries:
+                    type: integer
+                  auditedAt:
+                    type: string
+                    format: date-time
+        '402':
+          $ref: '#/components/responses/PaymentRequired'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /usage:
+    get:
+      operationId: getUsage
+      summary: Get current API usage and quota
+      tags: [Account]
+      responses:
+        '200':
+          description: Usage stats
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plan:
+                    type: string
+                    enum: [free, starter, professional, enterprise]
+                  period:
+                    type: object
+                    properties:
+                      start:
+                        type: string
+                        format: date-time
+                      end:
+                        type: string
+                        format: date-time
+                  calls:
+                    type: object
+                    properties:
+                      used:
+                        type: integer
+                      limit:
+                        type: integer
+                        description: -1 = unlimited
+                      remaining:
+                        type: integer
+                        nullable: true
+                  features:
+                    type: object
+                  nextResetAt:
+                    type: string
+                    format: date-time
+
+  /webhooks:
+    get:
+      operationId: listWebhooks
+      summary: List registered webhooks
+      tags: [Webhooks]
+      responses:
+        '200':
+          description: Webhook list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Webhook'
+    post:
+      operationId: createWebhook
+      summary: Register a webhook endpoint
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, events]
+              properties:
+                url:
+                  type: string
+                  description: HTTPS URL to receive events
+                  example: https://yourapp.com/webhooks/siteanalyzer
+                events:
+                  type: array
+                  items:
+                    type: string
+                    enum: [analysis.completed, analysis.failed, report.refreshed]
+                  example: [analysis.completed]
+                secret:
+                  type: string
+                  description: Optional HMAC secret. Auto-generated if omitted.
+      responses:
+        '201':
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhookId:
+                    type: string
+                    format: uuid
+                  url:
+                    type: string
+                  events:
+                    type: array
+                    items:
+                      type: string
+                  signingSecret:
+                    type: string
+                    description: Store this securely — shown only once
+                  createdAt:
+                    type: string
+                    format: date-time
+
+  /webhooks/{webhookId}:
+    delete:
+      operationId: deleteWebhook
+      summary: Deregister a webhook
+      tags: [Webhooks]
+      parameters:
+        - name: webhookId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Webhook deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Get your free key at https://siteanalyzerpro.com/developers
+
+  schemas:
+    AnalysisReport:
+      type: object
+      properties:
+        reportId:
+          type: string
+          format: uuid
+        url:
+          type: string
+        reportType:
+          type: string
+          enum: [competitive, growth]
+        city:
+          type: string
+          nullable: true
+        state:
+          type: string
+          nullable: true
+        radiusMi:
+          type: integer
+        data:
+          type: object
+          description: Full analysis payload from Claude AI
+          properties:
+            overallScore:
+              type: integer
+              minimum: 0
+              maximum: 100
+            businessName:
+              type: string
+            businessType:
+              type: string
+            marketPosition:
+              type: string
+            executiveSummary:
+              type: string
+            scores:
+              type: object
+              properties:
+                seo:
+                  type: integer
+                digital:
+                  type: integer
+                content:
+                  type: integer
+                ux:
+                  type: integer
+            competitors:
+              type: array
+              items:
+                $ref: '#/components/schemas/Competitor'
+            strengths:
+              type: array
+              items:
+                $ref: '#/components/schemas/Finding'
+            weaknesses:
+              type: array
+              items:
+                $ref: '#/components/schemas/Finding'
+            gaps:
+              type: array
+              items:
+                $ref: '#/components/schemas/Gap'
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Recommendation'
+        createdAt:
+          type: string
+          format: date-time
+
+    Competitor:
+      type: object
+      properties:
+        name:
+          type: string
+        url:
+          type: string
+        score:
+          type: integer
+        distance:
+          type: string
+        description:
+          type: string
+
+    Finding:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        impact:
+          type: string
+          enum: [Critical, High, Medium, Low]
+        category:
+          type: string
+
+    Gap:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        competitor:
+          type: string
+        priority:
+          type: string
+          enum: [Critical, High, Medium, Low]
+        estimatedMonthlyRevenueImpact:
+          type: string
+
+    Recommendation:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        priority:
+          type: integer
+        effort:
+          type: string
+          enum: [Low, Medium, High]
+        impact:
+          type: string
+          enum: [High, Medium, Low]
+        timeframe:
+          type: string
+        estimatedCost:
+          type: string
+        steps:
+          type: array
+          items:
+            type: string
+
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        events:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        failureCount:
+          type: integer
+        lastSuccessAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Invalid or missing API key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: INVALID_API_KEY
+              message: API key required — pass X-API-Key header.
+    PaymentRequired:
+      description: Quota exceeded or plan upgrade needed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: QUOTA_EXCEEDED
+              message: Monthly quota exceeded. Upgrade at siteanalyzerpro.com/pricing
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Too many requests
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+x-ratelimit-plans:
+  free:
+    callsPerMonth: 100
+    callsPerMinute: 2
+    reportDepth: preview
+    webhooks: false
+    llmVisibility: false
+    priceUsd: 0
+  starter:
+    callsPerMonth: 500
+    callsPerMinute: 5
+    reportDepth: standard
+    webhooks: true
+    llmVisibility: false
+    priceUsd: 29
+  professional:
+    callsPerMonth: 2000
+    callsPerMinute: 10
+    reportDepth: deep
+    webhooks: true
+    llmVisibility: true
+    priceUsd: 99
+  enterprise:
+    callsPerMonth: unlimited
+    callsPerMinute: 30
+    reportDepth: deep
+    webhooks: true
+    llmVisibility: true
+    priceUsd: 299
