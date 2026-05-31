@@ -183,7 +183,7 @@ export default function ReportScreen({ data, url, generatedAt, onBack }: Props) 
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-syne font-bold text-lg text-gray-900">{c.name}</h3>
                     </div>
-                    <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">{c.url}</a>
+                    <a href={c.url} target="_blank" rel="noopener noreferrer" dir="ltr" className="text-blue-500 text-sm hover:underline">{c.url}</a>
                     <p className="text-gray-600 text-sm mt-3 leading-relaxed">{c.description}</p>
                     <div className="flex flex-wrap gap-2 mt-3">
                       {(c.tags || []).map((t, j) => <span key={j} className="bg-gray-100 text-gray-600 text-xs px-2.5 py-1 rounded-full">{t}</span>)}

@@ -270,7 +270,7 @@ export default function DashboardScreen({
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-400 truncate">{entry.url}</div>
+                      <div className="text-sm text-gray-400 truncate" dir="ltr">{entry.url}</div>
                       <div className="text-xs text-gray-400 mt-1">
                         {formatDate(entry.at)} · {entry.radius} {t.mileRadius}
                         {isGrowth && entry.city && ` · ${entry.city}${entry.state ? `, ${entry.state}` : ''}`}

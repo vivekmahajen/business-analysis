@@ -320,7 +320,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
                   <div className="flex items-start justify-between gap-4 mb-4">
                     <div>
                       <h3 className="font-syne font-bold text-lg text-gray-900">{c.name}</h3>
-                      {c.url && <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">{c.url}</a>}
+                      {c.url && <a href={c.url} target="_blank" rel="noopener noreferrer" dir="ltr" className="text-blue-500 text-sm hover:underline">{c.url}</a>}
                       {c.distance && <span className="ml-3 text-xs text-gray-400">{c.distance}</span>}
                     </div>
                   </div>
@@ -377,7 +377,7 @@ export default function GrowthReportScreen({ data, url, generatedAt, onBack }: P
 
         <div className="text-center py-8 border-t border-gray-200 text-gray-400 text-sm">
           Sales Growth Advisor by <strong className="text-gray-600">SiteAnalyzer Pro</strong> · {formatDate(generatedAt)}
-          <div className="text-xs mt-1"><a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{url}</a></div>
+          <div className="text-xs mt-1" dir="ltr"><a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">{url}</a></div>
         </div>
       </div>
     </div>
