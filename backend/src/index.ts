@@ -82,6 +82,15 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
+// Global error handler — must be last, after all routes
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  if ('status' in err && (err as any).status === 400 && 'body' in err) {
+    return res.status(400).json({ error: { code: 'INVALID_JSON', message: 'Request body contains invalid JSON.' } });
+  }
+  console.error(err);
+  res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error.' } });
+});
+
 app.listen(PORT, () => {
   console.log(`SiteAnalyzer Pro API running on port ${PORT}`);
 });
