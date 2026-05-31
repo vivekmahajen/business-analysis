@@ -38,8 +38,46 @@ function hashKey(rawKey: string) {
   return crypto.createHash('sha256').update(rawKey).digest('hex');
 }
 
+// RapidAPI proxy requests: verified by secret header, user identified by X-RapidAPI-User
+function handleRapidApiRequest(req: Request, res: Response, next: NextFunction) {
+  const rapidApiUser = (req.headers['x-rapidapi-user'] as string) || 'anonymous';
+  const rapidApiSubscription = (req.headers['x-rapidapi-subscription'] as string) || 'BASIC';
+
+  const planMap: Record<string, ApiPlanName> = {
+    BASIC: 'free', STARTER: 'starter', PRO: 'starter',
+    ULTRA: 'professional', MEGA: 'professional', ENTERPRISE: 'enterprise',
+  };
+  const planName: ApiPlanName = planMap[rapidApiSubscription.toUpperCase()] ?? 'free';
+  const plan = PLAN_LIMITS[planName];
+
+  // Synthetic key record for RapidAPI users (not stored in DB)
+  (req as ApiKeyRequest).apiKey = {
+    id: `rapidapi_${rapidApiUser}`,
+    userId: `rapidapi_${rapidApiUser}`,
+    keyHash: '',
+    keyPrefix: 'rapidapi',
+    name: `RapidAPI: ${rapidApiUser}`,
+    plan: planName,
+    callsThisMonth: 0,
+    callsTotal: BigInt(0),
+    isActive: true,
+  };
+  (req as ApiKeyRequest).apiPlan = plan;
+
+  res.setHeader('X-RateLimit-Plan', planName);
+  next();
+}
+
 export async function apiKeyAuth(req: Request, res: Response, next: NextFunction) {
-  const rawKey = (req.headers['x-api-key'] || req.headers['x-rapidapi-key']) as string | undefined;
+  // RapidAPI sends a proxy secret to prove requests come through their gateway
+  const rapidApiProxySecret = process.env.RAPIDAPI_PROXY_SECRET;
+  const incomingProxySecret = req.headers['x-rapidapi-proxy-secret'] as string | undefined;
+
+  if (rapidApiProxySecret && incomingProxySecret && incomingProxySecret === rapidApiProxySecret) {
+    return handleRapidApiRequest(req, res, next);
+  }
+
+  const rawKey = req.headers['x-api-key'] as string | undefined;
 
   if (!rawKey) {
     return res.status(401).json({ error: { code: 'INVALID_API_KEY', message: 'API key required — pass X-API-Key header.' } });
