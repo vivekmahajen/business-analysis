@@ -138,19 +138,17 @@ export async function generateGrowthAnalysis(
   let result: Record<string, unknown> | null = null;
   for (const block of response.content) {
     if (block.type === 'text') {
-      console.log('[growth] text block length:', block.text.length);
       const match = block.text.match(/\{[\s\S]*\}/);
       if (match) {
         try {
           result = JSON.parse(match[0]);
+          console.log('[growth] parsed JSON from text block, length:', block.text.length);
           break;
-        } catch (parseErr) {
-          console.error('[growth] JSON parse failed, first 500 chars:', match[0].slice(0, 500));
-          console.error('[growth] last 200 chars:', match[0].slice(-200));
+        } catch {
+          // Intermediate text block contained braces but wasn't valid JSON — keep searching
         }
-      } else {
-        console.error('[growth] no JSON object found in text block, preview:', block.text.slice(0, 300));
       }
+      // Intermediate reasoning blocks are expected when Claude uses web_search; not an error
     }
   }
 
