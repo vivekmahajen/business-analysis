@@ -6,7 +6,7 @@ import { api } from '../utils/api';
 interface Props {
   url: string;
   radius: number;
-  reportType?: 'competitive' | 'growth';
+  reportType?: 'competitive' | 'growth' | 'review';
   city?: string;
   state?: string;
   onSuccess: (paymentIntentId: string) => void;
@@ -46,7 +46,7 @@ const stripeAppearance = {
 };
 
 interface CheckoutFormProps {
-  reportType: 'competitive' | 'growth';
+  reportType: 'competitive' | 'growth' | 'review';
   onSuccess: (id: string) => void;
   onBack: () => void;
   headerClass: string;
