@@ -28,6 +28,46 @@ function validateUrl(url: string): boolean {
   }
 }
 
+// In-memory job store for long-running review analysis
+interface ReviewJob {
+  status: 'pending' | 'completed' | 'failed';
+  reportId?: string;
+  error?: string;
+}
+const reviewJobs = new Map<string, ReviewJob>();
+
+function startReviewJob(userId: string, url: string): string {
+  const jobId = crypto.randomUUID();
+  reviewJobs.set(jobId, { status: 'pending' });
+
+  generateReviewAnalysis(url)
+    .then(async (analysisData) => {
+      const report = await prisma.report.create({
+        data: {
+          userId,
+          url,
+          urlHash: hashUrl(url),
+          radiusMi: 0,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          reportData: analysisData as any,
+          reportType: 'review',
+          paidAmount: 0,
+        },
+      });
+      reviewJobs.set(jobId, { status: 'completed', reportId: report.id });
+    })
+    .catch((err) => {
+      console.error('[review] job error:', err);
+      reviewJobs.set(jobId, { status: 'failed', error: 'Failed to generate review analysis' });
+    })
+    .finally(() => {
+      // Clean up after 10 minutes
+      setTimeout(() => reviewJobs.delete(jobId), 10 * 60 * 1000);
+    });
+
+  return jobId;
+}
+
 // GET /api/reports — list user's reports
 router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -173,54 +213,53 @@ router.post('/generate-growth', requireAuth, checkAndDeductCredit, async (req: A
   }
 });
 
-// POST /api/reports/generate-review — Review Intelligence Analysis
-router.post('/generate-review', requireAuth, checkAndDeductCredit, async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/reports/generate-review — starts async job, returns jobId immediately
+router.post('/generate-review', requireAuth, checkAndDeductCredit, (req: AuthRequest, res: Response): void => {
   const { url } = req.body;
   if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
   if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL: private/local addresses not allowed' }); return; }
-  try {
-    const analysisData = await generateReviewAnalysis(url);
-    const businessName = ((analysisData as any)?.business?.name as string) || 'Review Analysis';
-    const report = await prisma.report.create({
-      data: {
-        userId: req.userId!,
-        url,
-        urlHash: hashUrl(url),
-        radiusMi: 0,
-        reportData: analysisData as any,
-        reportType: 'review',
-        paidAmount: 0,
-      },
-    });
-    res.json({ id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' });
-  } catch (err) {
-    console.error('[review] generate error:', err);
-    res.status(500).json({ error: 'Failed to generate review analysis' });
-  }
+  const jobId = startReviewJob(req.userId!, url);
+  res.status(202).json({ jobId });
 });
 
-// POST /api/reports/generate-review-admin — admin bypass
-router.post('/generate-review-admin', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+// POST /api/reports/generate-review-admin — admin bypass, also async
+router.post('/generate-review-admin', requireAuth, requireAdmin, (req: AuthRequest, res: Response): void => {
   const { url } = req.body;
   if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
   if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL' }); return; }
+  const jobId = startReviewJob(req.userId!, url);
+  res.status(202).json({ jobId });
+});
+
+// GET /api/reports/review-job/:jobId — poll for async review job status
+router.get('/review-job/:jobId', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const job = reviewJobs.get(req.params.jobId);
+  if (!job) {
+    res.status(404).json({ status: 'not_found', error: 'Job not found or expired' });
+    return;
+  }
+  if (job.status === 'pending') {
+    res.json({ status: 'pending' });
+    return;
+  }
+  if (job.status === 'failed') {
+    res.status(500).json({ status: 'failed', error: job.error });
+    return;
+  }
   try {
-    const analysisData = await generateReviewAnalysis(url);
-    const report = await prisma.report.create({
-      data: {
-        userId: req.userId!,
-        url,
-        urlHash: hashUrl(url),
-        radiusMi: 0,
-        reportData: analysisData as any,
-        reportType: 'review',
-        paidAmount: 0,
-      },
+    const report = await prisma.report.findFirst({
+      where: { id: job.reportId!, userId: req.userId! },
     });
-    res.json({ id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' });
-  } catch (err) {
-    console.error('[review] admin generate error:', err);
-    res.status(500).json({ error: 'Failed to generate review analysis' });
+    if (!report) {
+      res.status(404).json({ error: 'Report not found' });
+      return;
+    }
+    res.json({
+      status: 'completed',
+      report: { id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' },
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch report' });
   }
 });
 

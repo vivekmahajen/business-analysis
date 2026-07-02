@@ -189,7 +189,20 @@ function AppInner() {
       } else if (effectiveReportType === 'growth') {
         entry = await api.generateGrowthReport(url, rad, effectiveCity, effectiveState) as AnalysisEntry;
       } else if (effectiveReportType === 'review') {
-        entry = await api.generateReviewReport(url) as AnalysisEntry;
+        const { jobId } = await api.generateReviewReport(url);
+        // Poll until the background job completes (avoids gateway timeout)
+        let pollResult: AnalysisEntry | null = null;
+        for (let i = 0; i < 36; i++) { // up to 3 minutes (36 × 5s)
+          await new Promise<void>(resolve => setTimeout(resolve, 5000));
+          const poll = await api.pollReviewJob(jobId);
+          if (poll.status === 'failed') throw new Error(poll.error || 'Review analysis failed');
+          if (poll.status === 'completed' && poll.report) {
+            pollResult = poll.report as AnalysisEntry;
+            break;
+          }
+        }
+        if (!pollResult) throw new Error('Review analysis timed out. Please try again.');
+        entry = pollResult;
       } else {
         entry = await api.generateReport(url, rad) as AnalysisEntry;
       }

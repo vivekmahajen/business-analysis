@@ -129,13 +129,16 @@ export const api = {
     }),
 
   generateReviewReport: (url: string) =>
-    request<unknown>('/reports/generate-review', {
+    request<{ jobId: string }>('/reports/generate-review', {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
 
+  pollReviewJob: (jobId: string) =>
+    request<{ status: 'pending' | 'completed' | 'failed'; report?: unknown; error?: string }>(`/reports/review-job/${jobId}`),
+
   generateReviewReportAdmin: (url: string) =>
-    request<unknown>('/reports/generate-review-admin', {
+    request<{ jobId: string }>('/reports/generate-review-admin', {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
