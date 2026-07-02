@@ -5,6 +5,7 @@ import { requireAuth, requireAdmin, AuthRequest } from '../middleware/auth';
 import { checkAndDeductCredit } from '../middleware/credits';
 import { generateAnalysis } from '../services/analysis';
 import { generateGrowthAnalysis } from '../services/growthAnalysis';
+import { generateReviewAnalysis } from '../services/reviewAnalysis';
 import { upsertScore } from '../services/scoreCache';
 
 const router = Router();
@@ -169,6 +170,57 @@ router.post('/generate-growth', requireAuth, checkAndDeductCredit, async (req: A
   } catch (err) {
     console.error('Admin generate-growth error:', err);
     res.status(500).json({ error: 'Failed to generate growth report' });
+  }
+});
+
+// POST /api/reports/generate-review — Review Intelligence Analysis
+router.post('/generate-review', requireAuth, checkAndDeductCredit, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { url } = req.body;
+  if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
+  if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL: private/local addresses not allowed' }); return; }
+  try {
+    const analysisData = await generateReviewAnalysis(url);
+    const businessName = ((analysisData as any)?.business?.name as string) || 'Review Analysis';
+    const report = await prisma.report.create({
+      data: {
+        userId: req.userId!,
+        url,
+        urlHash: hashUrl(url),
+        radiusMi: 0,
+        reportData: analysisData as any,
+        reportType: 'review',
+        paidAmount: 0,
+      },
+    });
+    res.json({ id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' });
+  } catch (err) {
+    console.error('[review] generate error:', err);
+    res.status(500).json({ error: 'Failed to generate review analysis' });
+  }
+});
+
+// POST /api/reports/generate-review-admin — admin bypass
+router.post('/generate-review-admin', requireAuth, requireAdmin, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { url } = req.body;
+  if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
+  if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL' }); return; }
+  try {
+    const analysisData = await generateReviewAnalysis(url);
+    const report = await prisma.report.create({
+      data: {
+        userId: req.userId!,
+        url,
+        urlHash: hashUrl(url),
+        radiusMi: 0,
+        reportData: analysisData as any,
+        reportType: 'review',
+        paidAmount: 0,
+      },
+    });
+    res.json({ id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' });
+  } catch (err) {
+    console.error('[review] admin generate error:', err);
+    res.status(500).json({ error: 'Failed to generate review analysis' });
   }
 });
 

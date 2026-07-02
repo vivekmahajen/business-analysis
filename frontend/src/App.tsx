@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, AnalysisData, GrowthAdvisorData, AnalysisEntry, Screen, AuthMode } from './types';
+import { User, AnalysisData, GrowthAdvisorData, ReviewIntelligenceData, AnalysisEntry, Screen, AuthMode } from './types';
 import { api, CreditExhaustedError, BillingStatus } from './utils/api';
 import { LanguageProvider } from './i18n';
 import LandingScreen from './components/LandingScreen';
@@ -10,6 +10,7 @@ import PaymentScreen from './components/PaymentScreen';
 import GeneratingScreen from './components/GeneratingScreen';
 import ReportScreen from './components/ReportScreen';
 import GrowthReportScreen from './components/GrowthReportScreen';
+import ReviewReportScreen from './components/ReviewReportScreen';
 import AdminLeadDiscoveryScreen from './components/AdminLeadDiscoveryScreen';
 import PricingScreen from './components/PricingScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
@@ -23,14 +24,15 @@ function AppInner() {
   const [radius, setRadius] = useState(25);
   const [report, setReport] = useState<AnalysisData | null>(null);
   const [growthReport, setGrowthReport] = useState<GrowthAdvisorData | null>(null);
-  const [reportMeta, setReportMeta] = useState<{ id: string; url: string; at: string; reportType?: 'competitive' | 'growth' } | null>(null);
+  const [reviewReport, setReviewReport] = useState<ReviewIntelligenceData | null>(null);
+  const [reportMeta, setReportMeta] = useState<{ id: string; url: string; at: string; reportType?: 'competitive' | 'growth' | 'review' } | null>(null);
   const [saved, setSaved] = useState<AnalysisEntry[]>([]);
   const [step, setStep] = useState(0);
   const [done, setDone] = useState<number[]>([]);
   const [foundRep, setFoundRep] = useState<AnalysisEntry | null>(null);
   const [pendUrl, setPendUrl] = useState('');
   const [pendRad, setPendRad] = useState(25);
-  const [pendReportType, setPendReportType] = useState<'competitive' | 'growth'>('competitive');
+  const [pendReportType, setPendReportType] = useState<'competitive' | 'growth' | 'review'>('competitive');
   const [pendCity, setPendCity] = useState('');
   const [pendState, setPendState] = useState('');
   const [error, setError] = useState('');
@@ -115,6 +117,7 @@ function AppInner() {
     setUser(null);
     setReport(null);
     setGrowthReport(null);
+    setReviewReport(null);
     setSaved([]);
     setBillingStatus(null);
     setScreen('landing');
@@ -123,7 +126,7 @@ function AppInner() {
   const handleUrlSubmit = useCallback(async (
     url: string,
     rad: number,
-    reportType: 'competitive' | 'growth',
+    reportType: 'competitive' | 'growth' | 'review',
     city?: string,
     state?: string,
   ) => {
@@ -131,16 +134,19 @@ function AppInner() {
     setPendReportType(reportType);
     setPendCity(city || '');
     setPendState(state || '');
+    setPendUrl(url);
+    setPendRad(rad);
+    // Review reports always generate fresh — skip the "found existing" check
+    if (reportType === 'review') {
+      startGeneration(url, rad, undefined, 'review');
+      return;
+    }
     try {
       const result = await api.checkReport(url) as { found: boolean; report?: AnalysisEntry };
       if (result.found && result.report) {
         setFoundRep(result.report);
-        setPendUrl(url);
-        setPendRad(rad);
         setScreen('found');
       } else {
-        setPendUrl(url);
-        setPendRad(rad);
         startGeneration(url, rad, undefined, reportType, city || '', state || '');
       }
     } catch (e) {
@@ -153,7 +159,7 @@ function AppInner() {
     url: string,
     rad: number,
     paymentIntentId?: string,
-    reportType?: 'competitive' | 'growth',
+    reportType?: 'competitive' | 'growth' | 'review',
     city?: string,
     state?: string,
   ) => {
@@ -182,6 +188,8 @@ function AppInner() {
         entry = await api.confirmPayment(paymentIntentId, url, rad) as AnalysisEntry;
       } else if (effectiveReportType === 'growth') {
         entry = await api.generateGrowthReport(url, rad, effectiveCity, effectiveState) as AnalysisEntry;
+      } else if (effectiveReportType === 'review') {
+        entry = await api.generateReviewReport(url) as AnalysisEntry;
       } else {
         entry = await api.generateReport(url, rad) as AnalysisEntry;
       }
@@ -193,13 +201,19 @@ function AppInner() {
       loadBillingStatus();
 
       setTimeout(() => {
-        const entryReportType = (entry as AnalysisEntry & { reportType?: string }).reportType as 'competitive' | 'growth' | undefined;
+        const entryReportType = (entry as AnalysisEntry & { reportType?: string }).reportType as 'competitive' | 'growth' | 'review' | undefined;
         if (entryReportType === 'growth') {
           setGrowthReport(entry.data as unknown as GrowthAdvisorData);
           setReport(null);
+          setReviewReport(null);
+        } else if (entryReportType === 'review') {
+          setReviewReport(entry.data as unknown as ReviewIntelligenceData);
+          setReport(null);
+          setGrowthReport(null);
         } else {
           setReport(entry.data as AnalysisData);
           setGrowthReport(null);
+          setReviewReport(null);
         }
         setReportMeta({
           id: entry.id,
@@ -231,9 +245,15 @@ function AppInner() {
     if (entryReportType === 'growth') {
       setGrowthReport(entry.data as unknown as GrowthAdvisorData);
       setReport(null);
+      setReviewReport(null);
+    } else if (entryReportType === 'review') {
+      setReviewReport(entry.data as unknown as ReviewIntelligenceData);
+      setReport(null);
+      setGrowthReport(null);
     } else {
       setReport(entry.data as AnalysisData);
       setGrowthReport(null);
+      setReviewReport(null);
     }
     setReportMeta({
       id: entry.id,
@@ -370,6 +390,16 @@ function AppInner() {
       return (
         <GrowthReportScreen
           data={growthReport}
+          url={reportMeta.url}
+          generatedAt={reportMeta.at}
+          onBack={() => setScreen('dashboard')}
+        />
+      );
+    }
+    if (reportMeta?.reportType === 'review' && reviewReport) {
+      return (
+        <ReviewReportScreen
+          data={reviewReport}
           url={reportMeta.url}
           generatedAt={reportMeta.at}
           onBack={() => setScreen('dashboard')}

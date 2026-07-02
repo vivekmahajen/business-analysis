@@ -90,9 +90,72 @@ export interface AnalysisEntry {
   radius: number;
   at: string;
   data: AnalysisData;
-  reportType?: 'competitive' | 'growth';
+  reportType?: 'competitive' | 'growth' | 'review';
   city?: string;
   state?: string;
+}
+
+// Review Intelligence types
+
+export interface ReviewAspect {
+  aspect: string;
+  positive: number;
+  neutral: number;
+  negative: number;
+  frequency: number;
+  example: string;
+  note?: string;
+}
+
+export interface ReviewTheme {
+  theme: string;
+  frequency: number;
+  example: string;
+}
+
+export interface ReviewPainPoint {
+  theme: string;
+  frequency: number;
+  severity: 'low' | 'medium' | 'high';
+  safety_flag: boolean;
+  example: string;
+}
+
+export interface ReviewRecommendation {
+  theme: string;
+  action: string;
+  type: 'quick_win' | 'structural';
+  expected_impact: string;
+  impact_is_hypothesis: boolean;
+  how_to_measure: string;
+}
+
+export interface ReviewSignals {
+  rating_text_mismatches: number;
+  suspected_fake: string[];
+  emerging: string[];
+  resolved: string[];
+  trend: 'improving' | 'declining' | 'stable' | 'not_assessable';
+}
+
+export interface ReviewIntelligenceData {
+  business: { name: string; url: string; vertical: string; };
+  meta: {
+    reviews_analyzed: number;
+    sources: string[];
+    date_range: string;
+    avg_rating: number | null;
+    suspected_fake_count: number;
+    confidence: 'low' | 'moderate' | 'high';
+    confidence_reason: string;
+  };
+  overall_sentiment: { positive: number; neutral: number; negative: number; mixed: number; };
+  aspects: ReviewAspect[];
+  loves: ReviewTheme[];
+  pain_points: ReviewPainPoint[];
+  signals: ReviewSignals;
+  recommendations: ReviewRecommendation[];
+  limitations: string;
 }
 
 // Growth Advisor types

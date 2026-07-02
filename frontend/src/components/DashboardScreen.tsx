@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, AnalysisEntry } from '../types';
+import { User, AnalysisEntry, ReviewIntelligenceData } from '../types';
 import { useI18n } from '../i18n';
 import { BillingStatus } from '../utils/api';
 import LanguagePicker from './LanguagePicker';
@@ -14,7 +14,7 @@ interface Props {
   setUrlInput: (v: string) => void;
   radius: number;
   setRadius: (v: number) => void;
-  onSubmit: (url: string, radius: number, reportType: 'competitive' | 'growth', city?: string, state?: string) => void;
+  onSubmit: (url: string, radius: number, reportType: 'competitive' | 'growth' | 'review', city?: string, state?: string) => void;
   onViewReport: (entry: AnalysisEntry) => void;
   onDeleteReport: (id: string) => void;
   onLogout: () => void;
@@ -34,7 +34,7 @@ export default function DashboardScreen({
   billingStatus, onUpgrade, error, setError,
 }: Props) {
   const [checking, setChecking] = useState(false);
-  const [reportType, setReportType] = useState<'competitive' | 'growth'>('competitive');
+  const [reportType, setReportType] = useState<'competitive' | 'growth' | 'review'>('competitive');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const { t } = useI18n();
@@ -59,6 +59,7 @@ export default function DashboardScreen({
   const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
 
   const getEntryScore = (entry: AnalysisEntry): number | null => {
+    if (entry.reportType === 'review') return null;
     const scoreKey = entry.reportType === 'growth' ? 'growthPotentialScore' : 'overallScore';
     const d = entry.data as unknown as Record<string, unknown>;
     const raw = d[scoreKey];
@@ -152,6 +153,17 @@ export default function DashboardScreen({
               >
                 {t.salesGrowthAdvisor}
               </button>
+              <button
+                type="button"
+                onClick={() => setReportType('review')}
+                className={`px-4 py-2.5 text-sm font-medium transition-colors ${
+                  reportType === 'review'
+                    ? 'bg-violet-600 text-white'
+                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                Review Intelligence
+              </button>
             </div>
           </div>
 
@@ -168,33 +180,39 @@ export default function DashboardScreen({
                 className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
-              <select
-                value={radius}
-                onChange={e => setRadius(Number(e.target.value))}
-                className="border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                {RADII.map(r => (
-                  <option key={r} value={r}>{r} {r !== 1 ? t.milesLabel : t.mileLabel}</option>
-                ))}
-              </select>
+              {reportType !== 'review' && (
+                <select
+                  value={radius}
+                  onChange={e => setRadius(Number(e.target.value))}
+                  className="border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                >
+                  {RADII.map(r => (
+                    <option key={r} value={r}>{r} {r !== 1 ? t.milesLabel : t.mileLabel}</option>
+                  ))}
+                </select>
+              )}
               <button
                 type="submit"
                 disabled={checking}
                 className={`font-semibold px-6 py-3 rounded-xl transition-colors whitespace-nowrap text-white disabled:opacity-60 ${
-                  reportType === 'growth'
-                    ? isAdmin
-                      ? 'bg-emerald-500 hover:bg-emerald-600'
-                      : 'bg-emerald-600 hover:bg-emerald-700'
-                    : isAdmin
-                      ? 'bg-amber-500 hover:bg-amber-600'
-                      : 'bg-blue-600 hover:bg-blue-700'
+                  reportType === 'review'
+                    ? 'bg-violet-600 hover:bg-violet-700'
+                    : reportType === 'growth'
+                      ? isAdmin
+                        ? 'bg-emerald-500 hover:bg-emerald-600'
+                        : 'bg-emerald-600 hover:bg-emerald-700'
+                      : isAdmin
+                        ? 'bg-amber-500 hover:bg-amber-600'
+                        : 'bg-blue-600 hover:bg-blue-700'
                 }`}
               >
                 {checking
                   ? t.checking
-                  : reportType === 'growth'
-                    ? `${t.salesGrowthAdvisor}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
-                    : `${t.competitiveAnalysis}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
+                  : reportType === 'review'
+                    ? `Analyze Reviews${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
+                    : reportType === 'growth'
+                      ? `${t.salesGrowthAdvisor}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
+                      : `${t.competitiveAnalysis}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
                 }
               </button>
             </div>
@@ -256,6 +274,10 @@ export default function DashboardScreen({
               {saved.map(entry => {
                 const score = getEntryScore(entry);
                 const isGrowth = entry.reportType === 'growth';
+                const isReview = entry.reportType === 'review';
+                const reviewCount = isReview
+                  ? ((entry.data as unknown as ReviewIntelligenceData)?.meta?.reviews_analyzed ?? null)
+                  : null;
                 return (
                   <div
                     key={entry.id}
@@ -269,16 +291,29 @@ export default function DashboardScreen({
                             Growth
                           </span>
                         )}
+                        {isReview && (
+                          <span className="text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium flex-shrink-0">
+                            Reviews
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm text-gray-400 truncate" dir="ltr">{entry.url}</div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {formatDate(entry.at)} · {entry.radius} {t.mileRadius}
+                        {formatDate(entry.at)}
+                        {!isReview && ` · ${entry.radius} ${t.mileRadius}`}
                         {isGrowth && entry.city && ` · ${entry.city}${entry.state ? `, ${entry.state}` : ''}`}
                       </div>
                     </div>
 
                     <div className="text-right flex-shrink-0">
-                      {score !== null ? (
+                      {isReview ? (
+                        <>
+                          <div className="font-syne font-bold text-2xl text-violet-600">
+                            {reviewCount !== null ? reviewCount : '—'}
+                          </div>
+                          <div className="text-xs text-gray-400">reviews</div>
+                        </>
+                      ) : score !== null ? (
                         <>
                           <div className={`font-syne font-bold text-2xl ${scoreColor(score)}`}>{score}</div>
                           <div className="text-xs text-gray-400">

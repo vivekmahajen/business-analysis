@@ -128,6 +128,18 @@ export const api = {
       body: JSON.stringify({ url, radius, city, state }),
     }),
 
+  generateReviewReport: (url: string) =>
+    request<unknown>('/reports/generate-review', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    }),
+
+  generateReviewReportAdmin: (url: string) =>
+    request<unknown>('/reports/generate-review-admin', {
+      method: 'POST',
+      body: JSON.stringify({ url }),
+    }),
+
   createGrowthPaymentIntent: (url: string, radius: number, city: string, state: string) =>
     request<{ clientSecret: string; publishableKey: string }>('/payments/intent', {
       method: 'POST',
