@@ -33,9 +33,9 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Pr
 
   const handleAddon = async () => {
     setError('');
-    setLoading('pack_25');
+    setLoading('pack_10');
     try {
-      const { url } = await api.createAddonCheckout('pack_25');
+      const { url } = await api.createAddonCheckout('pack_10');
       window.location.href = url;
     } catch (e) {
       setError((e as Error).message);
@@ -112,19 +112,19 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Pr
             <div className="flex-1 h-px bg-gray-100" />
           </div>
 
-          {/* Addon pack quick buy — 25 credits covers Review Intelligence (costs 15) */}
+          {/* Addon pack quick buy */}
           <button
             onClick={handleAddon}
             disabled={!!loading}
             className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-60"
           >
             <div className="text-left">
-              <div className="font-medium text-gray-900">25 Credits pack</div>
-              <div className="text-sm text-gray-500">One-time purchase · never expire · covers Review Intelligence</div>
+              <div className="font-medium text-gray-900">10 Credits pack</div>
+              <div className="text-sm text-gray-500">One-time purchase · never expire</div>
             </div>
             <div className="text-right flex-shrink-0 ml-4">
-              <div className="font-bold text-gray-700">$30</div>
-              {loading === 'pack_25' ? (
+              <div className="font-bold text-gray-700">$15</div>
+              {loading === 'pack_10' ? (
                 <div className="text-xs text-gray-400 mt-0.5">Redirecting…</div>
               ) : (
                 <div className="text-xs text-gray-400 mt-0.5">Buy once →</div>
