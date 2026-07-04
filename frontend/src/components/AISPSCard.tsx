@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../utils/api';
-import { LlmAuditSummary, LlmAudit } from '../types';
+import { LlmAuditSummary, LlmAudit, AdvisorReport } from '../types';
+import AIAdvisorReport from './AIAdvisorReport';
 
 const CATEGORIES = [
   'Food & Restaurant', 'Retail', 'Health & Wellness', 'Beauty & Personal Care',
@@ -156,6 +157,9 @@ interface AuditDetailProps {
 function AuditDetail({ auditId, onClose }: AuditDetailProps) {
   const [audit, setAudit] = useState<LlmAudit | null>(null);
   const [loading, setLoading] = useState(true);
+  const [advisorReport, setAdvisorReport] = useState<AdvisorReport | null>(null);
+  const [advisorLoading, setAdvisorLoading] = useState(false);
+  const [advisorError, setAdvisorError] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadAudit = async () => {
@@ -253,6 +257,50 @@ function AuditDetail({ auditId, onClose }: AuditDetailProps) {
       {audit.status === 'failed' && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
           Audit failed: {audit.errorMessage || 'Unknown error'}
+        </div>
+      )}
+
+      {/* AI Advisor Section */}
+      {audit.status === 'completed' && (
+        <div className="border-t border-gray-100 pt-5">
+          {advisorReport ? (
+            <AIAdvisorReport report={advisorReport} />
+          ) : (
+            <div className="text-center">
+              <div className="text-sm font-semibold text-gray-800 mb-1">AI Search Visibility Advisor</div>
+              <div className="text-xs text-gray-400 mb-4 max-w-sm mx-auto">
+                Get a prioritized fix plan and transparent revenue opportunity model based on your audit results.
+              </div>
+              {advisorError && (
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+                  {advisorError}
+                </div>
+              )}
+              <button
+                onClick={async () => {
+                  setAdvisorError('');
+                  setAdvisorLoading(true);
+                  try {
+                    const { report } = await api.runAdvisorAnalysis(auditId);
+                    setAdvisorReport(report);
+                  } catch (e) {
+                    setAdvisorError((e as Error).message || 'Failed to run advisor');
+                  } finally {
+                    setAdvisorLoading(false);
+                  }
+                }}
+                disabled={advisorLoading}
+                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-sm px-5 py-2.5 rounded-xl transition-colors"
+              >
+                {advisorLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
+                    Analyzing (~20s)…
+                  </span>
+                ) : 'Run AI Advisor →'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

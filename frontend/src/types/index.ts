@@ -249,6 +249,38 @@ export interface GrowthAdvisorData {
   topQuickWin: string;
 }
 
+export interface AdvisorReport {
+  business: { name: string; url: string; vertical: string };
+  snapshot: {
+    engines: Array<{
+      engine: string;
+      brand_cited: boolean;
+      share_of_voice_pct: number | null;
+      top_competitors_cited: string[];
+      how_described: string;
+    }>;
+    confidence: 'low' | 'moderate' | 'high';
+  };
+  diagnosis: Array<{ cause: string; applies: boolean; evidence: string; impact: 'low' | 'medium' | 'high' }>;
+  fixes: Array<{
+    action: string;
+    lever: string;
+    effort: 'low' | 'medium' | 'high';
+    expected_visibility_effect: string;
+    measure: string;
+    tier: 'quick_win' | 'structural';
+  }>;
+  dollar_model: {
+    inputs: Array<{ name: string; value: number | string | null; source: 'user_data' | 'benchmark'; note: string }>;
+    formula: string;
+    trackable_annual_revenue: { conservative: number; expected: number; optimistic: number };
+    zero_click_brand_influence: string;
+    dominant_sensitivity: string;
+    is_projection_not_guarantee: true;
+  };
+  limitations: string;
+}
+
 export type Screen =
   | 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report'
   | 'admin-leads' | 'pricing' | 'reset-password'

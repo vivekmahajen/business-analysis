@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 import { runLlmAudit } from '../services/llm-visibility';
+import { runAdvisorAnalysis } from '../services/advisorAnalysis';
 
 const router = Router();
 
@@ -76,6 +77,38 @@ router.get('/audit/:id', requireAuth, async (req: AuthRequest, res: Response): P
     res.json(audit);
   } catch {
     res.status(500).json({ error: 'Failed to fetch audit' });
+  }
+});
+
+// POST /api/llm/advisor/:id — run AI Search Visibility Advisor on a completed audit
+router.post('/advisor/:id', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    // Check ownership
+    const audit = await prisma.llmAudit.findFirst({
+      where: { id: req.params.id, userId: req.userId! },
+      select: { id: true, status: true, advisorReport: true },
+    });
+
+    if (!audit) {
+      res.status(404).json({ error: 'Audit not found' });
+      return;
+    }
+    if (audit.status !== 'completed') {
+      res.status(400).json({ error: 'Audit must be completed before running the advisor' });
+      return;
+    }
+
+    // Return cached report if already generated
+    if (audit.advisorReport) {
+      res.json({ report: audit.advisorReport, cached: true });
+      return;
+    }
+
+    const report = await runAdvisorAnalysis(req.params.id);
+    res.json({ report, cached: false });
+  } catch (err) {
+    console.error('[advisor] error:', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: (err as Error).message || 'Failed to run advisor analysis' });
   }
 });
 

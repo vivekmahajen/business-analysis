@@ -273,6 +273,9 @@ export const api = {
   getLlmAudits: () =>
     request<{ audits: import('../types').LlmAuditSummary[] }>('/llm/audits'),
 
+  runAdvisorAnalysis: (auditId: string) =>
+    request<{ report: import('../types').AdvisorReport; cached: boolean }>(`/llm/advisor/${auditId}`, { method: 'POST' }),
+
   joinLlmWaitlist: (params: { email: string; name?: string; businessUrl?: string; city?: string; state?: string }) =>
     request<{ message: string; alreadyJoined: boolean }>('/llm/waitlist', {
       method: 'POST',

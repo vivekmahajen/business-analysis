@@ -211,6 +211,7 @@ model LlmAudit {
   totalQueries   Int              @default(0) @map("total_queries")
   mentionCount   Int              @default(0) @map("mention_count")
   errorMessage   String?          @map("error_message")
+  advisorReport  Json?            @map("advisor_report")
   createdAt      DateTime         @default(now()) @map("created_at")
   completedAt    DateTime?        @map("completed_at")
   user           User             @relation(fields: [userId], references: [id])
