@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, AnalysisEntry, ReviewIntelligenceData } from '../types';
 import { useI18n } from '../i18n';
 import { BillingStatus } from '../utils/api';
@@ -38,6 +38,28 @@ export default function DashboardScreen({
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const { t } = useI18n();
+
+  // Normalize a URL to just its hostname without www prefix for comparison
+  const normalizeHost = (raw: string): string => {
+    try {
+      const withProto = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw;
+      return new URL(withProto).hostname.replace(/^www\./, '').toLowerCase();
+    } catch {
+      return raw.replace(/^https?:\/\//i, '').replace(/^www\./, '').split('/')[0].toLowerCase();
+    }
+  };
+
+  const registeredHost = user.websiteUrl ? normalizeHost(user.websiteUrl) : null;
+  const enteredHost = urlInput.trim() ? normalizeHost(urlInput.trim()) : '';
+  // Admins can review any URL; business owners only their registered site
+  const reviewAllowed = isAdmin || !registeredHost || (!!enteredHost && enteredHost === registeredHost);
+
+  // Auto-switch away from Review Intelligence when the URL no longer matches
+  useEffect(() => {
+    if (!reviewAllowed && reportType === 'review') {
+      setReportType('competitive');
+    }
+  }, [reviewAllowed, reportType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,16 +177,25 @@ export default function DashboardScreen({
               </button>
               <button
                 type="button"
-                onClick={() => setReportType('review')}
+                onClick={() => reviewAllowed && setReportType('review')}
+                disabled={!reviewAllowed}
+                title={!reviewAllowed && registeredHost ? `Review Intelligence is only available for your registered site (${registeredHost})` : undefined}
                 className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-                  reportType === 'review'
+                  reportType === 'review' && reviewAllowed
                     ? 'bg-violet-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
+                    : !reviewAllowed
+                      ? 'bg-white text-gray-300 cursor-not-allowed'
+                      : 'bg-white text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 Review Intelligence
               </button>
             </div>
+            {!reviewAllowed && registeredHost && urlInput.trim() && (
+              <p className="text-xs text-gray-400 mt-2">
+                Review Intelligence is only available for your registered site ({registeredHost}).
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
