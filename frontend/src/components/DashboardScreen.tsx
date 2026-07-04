@@ -209,7 +209,7 @@ export default function DashboardScreen({
                 {checking
                   ? t.checking
                   : reportType === 'review'
-                    ? `Analyze Reviews${!isAdmin && billingStatus && !billingStatus.unlimited ? ' — 15 credits' : ''}`
+                    ? isAdmin ? 'Analyze Reviews' : 'Analyze Reviews — 15 credits'
                     : reportType === 'growth'
                       ? `${t.salesGrowthAdvisor}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
                       : `${t.competitiveAnalysis}${billingStatus && !billingStatus.unlimited ? ` — ${billingStatus.creditsRemaining} credit${billingStatus.creditsRemaining !== 1 ? 's' : ''}` : ''}`
@@ -237,17 +237,19 @@ export default function DashboardScreen({
               </div>
             )}
 
-            {/* Low-balance warning for Review Intelligence (costs 15 tokens) */}
-            {reportType === 'review' && !isAdmin && billingStatus && !billingStatus.unlimited && billingStatus.creditsRemaining < 15 && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
-                Review Intelligence costs 15 credits per report. You have {billingStatus.creditsRemaining} remaining.{' '}
-                <button onClick={onUpgrade} className="underline font-medium hover:text-amber-900">Top up</button> to continue.
-              </div>
-            )}
-            {reportType === 'review' && !isAdmin && billingStatus && !billingStatus.unlimited && billingStatus.creditsRemaining >= 15 && (
-              <div className="text-xs text-violet-500 text-center">
-                Review Intelligence uses 15 credits · Saved reports are free to re-view
-              </div>
+            {/* Pricing note for Review Intelligence */}
+            {reportType === 'review' && !isAdmin && (
+              billingStatus && !billingStatus.unlimited && billingStatus.creditsRemaining < 15
+                ? (
+                  <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm">
+                    Review Intelligence costs 15 credits per fresh report. You have {billingStatus.creditsRemaining} remaining.{' '}
+                    <button onClick={onUpgrade} className="underline font-medium hover:text-amber-900">Top up your account</button> to continue.
+                  </div>
+                ) : (
+                  <div className="text-xs text-violet-500 text-center">
+                    Fresh reports cost 15 credits · Saved reports are free to re-view anytime
+                  </div>
+                )
             )}
 
             {error && (
