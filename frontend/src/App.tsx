@@ -442,6 +442,7 @@ function AppInner() {
                 planName: newPlan ? (PLANS_LABEL[newPlan] ?? prev.planName) : prev.planName,
                 unlimited: newCredits === 999999,
               } : prev);
+              loadBillingStatus();
             }}
           />
         )}
