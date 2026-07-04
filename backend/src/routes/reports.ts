@@ -58,7 +58,7 @@ function startReviewJob(
   generateReviewAnalysis(url)
     .then(async (rawAnalysis) => {
       // Apply the Consumer Publish Safety Filter before storing
-      const publishedData = applyConsumerFilter(rawAnalysis as RawReviewAnalysis);
+      const publishedData = applyConsumerFilter(rawAnalysis as unknown as RawReviewAnalysis);
 
       // Atomic: save immutable report snapshot + link credit transaction to report
       const report = await prisma.$transaction(async (tx) => {
