@@ -347,6 +347,10 @@ function AppInner() {
         isLoggedIn={!!user}
         onLoginPrompt={() => { setAuthMode('register'); setScreen('auth'); }}
         currentPlan={billingStatus?.plan}
+        onCreditsUpdated={(newCredits) => {
+          setBillingStatus(prev => prev ? { ...prev, creditsRemaining: newCredits } : prev);
+          loadBillingStatus();
+        }}
       />
     );
   }

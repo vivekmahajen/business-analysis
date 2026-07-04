@@ -17,6 +17,7 @@ interface Props {
   isLoggedIn: boolean;
   onLoginPrompt: () => void;
   currentPlan?: string;
+  onCreditsUpdated?: (newCredits: number) => void;
 }
 
 const PLAN_DISPLAY: Record<string, { tagline: string; highlight?: boolean; badge?: string }> = {
@@ -32,10 +33,11 @@ const ADDON_PACKS = [
   { id: 'pack_50', credits: 50, priceCents: 5000, label: '50 Credits' },
 ];
 
-export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, currentPlan }: Props) {
+export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, currentPlan, onCreditsUpdated }: Props) {
   const [interval, setInterval] = useState<'month' | 'year'>('month');
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
@@ -76,15 +78,28 @@ export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, curre
     }
   };
 
-  const handleAddon = async (packId: string) => {
+  const handleAddon = async (packId: string, credits: number) => {
     if (!isLoggedIn) { onLoginPrompt(); return; }
     setError('');
+    setSuccessMsg('');
     setLoading(packId);
     try {
       const { url } = await api.createAddonCheckout(packId);
       window.location.href = url;
     } catch (e) {
-      setError((e as Error).message);
+      const msg = (e as Error).message;
+      // If Stripe isn't configured, use demo mode
+      if (msg.includes('not configured') || msg.includes('Pack not configured')) {
+        try {
+          const result = await api.demoAddCredits(credits);
+          setSuccessMsg(`${result.creditsAdded} credits added — you now have ${result.creditsRemaining}`);
+          onCreditsUpdated?.(result.creditsRemaining);
+        } catch (demoErr) {
+          setError((demoErr as Error).message);
+        }
+      } else {
+        setError(msg);
+      }
       setLoading(null);
     }
   };
@@ -141,6 +156,11 @@ export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, curre
         {error && (
           <div className="max-w-lg mx-auto mb-6 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm text-center">
             {error}
+          </div>
+        )}
+        {successMsg && (
+          <div className="max-w-lg mx-auto mb-6 bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm text-center">
+            {successMsg}
           </div>
         )}
 
@@ -244,7 +264,7 @@ export default function PricingScreen({ onBack, isLoggedIn, onLoginPrompt, curre
                 <div className="text-sm text-gray-500 mb-3">credits · one-time</div>
                 <div className="text-lg font-semibold text-gray-900 mb-4">${(pack.priceCents / 100).toFixed(0)}</div>
                 <button
-                  onClick={() => handleAddon(pack.id)}
+                  onClick={() => handleAddon(pack.id, pack.credits)}
                   disabled={loading === pack.id}
                   className="w-full py-2 bg-gray-900 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors disabled:bg-gray-400"
                 >
