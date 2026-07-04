@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, AnalysisData, GrowthAdvisorData, ReviewIntelligenceData, AnalysisEntry, Screen, AuthMode } from './types';
 import { api, CreditExhaustedError, BillingStatus } from './utils/api';
 import { LanguageProvider } from './i18n';
@@ -39,6 +39,7 @@ function AppInner() {
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const billingRefreshPending = useRef(false);
 
   // Detect password-reset token in URL before restoring session
   useEffect(() => {
@@ -69,9 +70,10 @@ function AppInner() {
     const params = new URLSearchParams(window.location.search);
     const billing = params.get('billing');
     if (billing === 'success' || billing === 'addon_success') {
-      // Clean the URL and refresh billing status
       window.history.replaceState({}, '', window.location.pathname);
-      if (user) loadBillingStatus();
+      // Mark that we need to re-poll billing — Stripe webhook may not have
+      // processed yet, so we retry at 3s and 8s after auth finishes loading.
+      billingRefreshPending.current = true;
     } else if (billing === 'cancelled') {
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -99,7 +101,15 @@ function AppInner() {
   useEffect(() => {
     if (user && screen === 'dashboard') {
       loadReports();
-      if (!user.isAdmin) loadBillingStatus();
+      if (!user.isAdmin) {
+        loadBillingStatus();
+        if (billingRefreshPending.current) {
+          billingRefreshPending.current = false;
+          // Webhook may arrive seconds after the redirect — retry to catch it
+          setTimeout(() => loadBillingStatus(), 3000);
+          setTimeout(() => loadBillingStatus(), 8000);
+        }
+      }
     }
   }, [user, screen, loadReports, loadBillingStatus]);
 
