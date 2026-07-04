@@ -16,6 +16,10 @@ import PricingScreen from './components/PricingScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import UpgradeModal from './components/UpgradeModal';
 
+const PLANS_LABEL: Record<string, string> = {
+  free: 'Free', starter: 'Starter', pro: 'Pro', agency: 'Agency',
+};
+
 function AppInner() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [user, setUser] = useState<User | null>(null);
@@ -361,7 +365,16 @@ function AppInner() {
             currentPlan={billingStatus?.plan || 'free'}
             onClose={() => setShowUpgradeModal(false)}
             onViewPricing={() => { setShowUpgradeModal(false); setScreen('pricing'); }}
-            onSuccess={() => loadBillingStatus()}
+            onCreditsUpdated={(newCredits, newPlan) => {
+              setBillingStatus(prev => prev ? {
+                ...prev,
+                creditsRemaining: newCredits,
+                creditsTotal: newPlan ? (newCredits === 999999 ? -1 : newCredits) : prev.creditsTotal,
+                plan: newPlan ?? prev.plan,
+                planName: newPlan ? (PLANS_LABEL[newPlan] ?? prev.planName) : prev.planName,
+                unlimited: newCredits === 999999,
+              } : prev);
+            }}
           />
         )}
       </>

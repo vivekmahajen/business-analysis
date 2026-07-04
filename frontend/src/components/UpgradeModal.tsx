@@ -5,7 +5,7 @@ interface Props {
   currentPlan: string;
   onClose: () => void;
   onViewPricing: () => void;
-  onSuccess?: () => void;
+  onCreditsUpdated?: (newCreditsRemaining: number, newPlan?: string) => void;
 }
 
 const PLANS = [
@@ -14,7 +14,7 @@ const PLANS = [
   { id: 'agency', name: 'Agency', credits: -1, priceCents: 19900, highlight: false },
 ];
 
-export default function UpgradeModal({ currentPlan, onClose, onViewPricing, onSuccess }: Props) {
+export default function UpgradeModal({ currentPlan, onClose, onViewPricing, onCreditsUpdated }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -27,8 +27,9 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing, onSu
     try {
       const result = await api.demoUpgrade(planId);
       const plan = PLANS.find(p => p.id === planId);
-      setSuccessMsg(`Upgraded to ${plan?.name ?? planId} — ${result.creditsRemaining === 999999 ? 'unlimited' : result.creditsRemaining} credits`);
-      onSuccess?.();
+      const label = result.creditsRemaining === 999999 ? 'unlimited' : String(result.creditsRemaining);
+      setSuccessMsg(`Upgraded to ${plan?.name ?? planId} — ${label} credits`);
+      onCreditsUpdated?.(result.creditsRemaining, planId);
     } catch (e) {
       setError((e as Error).message);
       setLoading(null);
@@ -41,7 +42,7 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing, onSu
     try {
       const result = await api.demoAddCredits(25);
       setSuccessMsg(`${result.creditsAdded} credits added — you now have ${result.creditsRemaining}`);
-      onSuccess?.();
+      onCreditsUpdated?.(result.creditsRemaining);
     } catch (e) {
       setError((e as Error).message);
       setLoading(null);
