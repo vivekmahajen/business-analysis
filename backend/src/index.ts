@@ -79,6 +79,20 @@ app.get('/api/openapi.yaml', (_req, res) => {
 
 startWebhookWorker();
 
+// Reset any audits that were left in running/pending state from a previous process (e.g. Railway restart)
+prisma.llmAudit.updateMany({
+  where: {
+    status: { in: ['running', 'pending'] },
+    createdAt: { lt: new Date(Date.now() - 5 * 60 * 1000) },
+  },
+  data: {
+    status: 'failed',
+    errorMessage: 'Audit was interrupted by a server restart. Please run a new audit.',
+  },
+}).then(r => {
+  if (r.count > 0) console.log(`[startup] Reset ${r.count} stuck audit(s) to failed`);
+}).catch(err => console.error('[startup] Failed to reset stuck audits:', err));
+
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

@@ -35,10 +35,18 @@ function ScoreRing({ score, size = 56 }: { score: number; size?: number }) {
   );
 }
 
-function StatusBadge({ status }: { status: LlmAuditSummary['status'] }) {
+function isStuck(createdAt: string): boolean {
+  return Date.now() - new Date(createdAt).getTime() > 5 * 60 * 1000;
+}
+
+function StatusBadge({ status, createdAt }: { status: LlmAuditSummary['status']; createdAt?: string }) {
   if (status === 'completed') return <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Done</span>;
-  if (status === 'running') return <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium animate-pulse">Running…</span>;
-  if (status === 'pending') return <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">Queued</span>;
+  if (status === 'running' || status === 'pending') {
+    const stuck = createdAt && isStuck(createdAt);
+    return stuck
+      ? <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-medium">Stuck — run new audit</span>
+      : <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium animate-pulse">Running…</span>;
+  }
   return <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Failed</span>;
 }
 
@@ -187,10 +195,10 @@ function AuditDetail({ auditId, onClose }: AuditDetailProps) {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-semibold text-gray-900">{audit.businessName}</h3>
-            <StatusBadge status={audit.status} />
+            <StatusBadge status={audit.status} createdAt={audit.createdAt} />
           </div>
           <div className="text-sm text-gray-500">{audit.city}, {audit.state} · {audit.category}</div>
-          {audit.status === 'running' || audit.status === 'pending' ? (
+          {(audit.status === 'running' || audit.status === 'pending') && !isStuck(audit.createdAt) ? (
             <div className="text-xs text-purple-600 mt-1">
               {audit.results?.length || 0} of {audit.totalQueries || 20} queries complete — checking every 5s…
             </div>
@@ -263,6 +271,7 @@ export default function AISPSCard() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedAuditId, setSelectedAuditId] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const loadAudits = async () => {
     try {
@@ -275,7 +284,28 @@ export default function AISPSCard() {
     }
   };
 
-  useEffect(() => { loadAudits(); }, []);
+  useEffect(() => {
+    loadAudits();
+  }, []);
+
+  // Poll while any audit is still running/pending
+  useEffect(() => {
+    const hasActive = audits.some(a => a.status === 'running' || a.status === 'pending');
+    if (hasActive) {
+      if (!pollRef.current) {
+        pollRef.current = setInterval(loadAudits, 5000);
+      }
+    } else {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    }
+    return () => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audits]);
 
   const handleAuditStarted = () => {
     setShowForm(false);
@@ -351,7 +381,7 @@ export default function AISPSCard() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-gray-900 text-sm">{audit.businessName}</span>
-                  <StatusBadge status={audit.status} />
+                  <StatusBadge status={audit.status} createdAt={audit.createdAt} />
                 </div>
                 <div className="text-xs text-gray-400">{audit.city}, {audit.state} · {audit.category}</div>
                 {audit.status === 'completed' && (
