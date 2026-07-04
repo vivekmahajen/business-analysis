@@ -77,14 +77,14 @@ export default function CompleteProfileScreen({ pendingToken, needsPhone, userRo
               </div>
             )}
 
-            {!needsPhone && isBusinessOwner && (
+            {!needsPhone && (
               <div>
                 <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
                   Business website
                 </label>
                 <input
                   id="website"
-                  type="url"
+                  type="text"
                   value={websiteUrl}
                   onChange={e => setWebsiteUrl(e.target.value)}
                   required

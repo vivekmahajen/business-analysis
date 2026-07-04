@@ -302,9 +302,9 @@ router.post('/otp/verify', requirePending2FA, async (req: AuthRequest, res: Resp
       const { phone: _p, ...safeUser } = { ...user, phoneVerified: true, profileComplete: true };
       res.json({ user: safeUser, token, purpose: 'session', ...(recoveryCodes ? { recoveryCodes } : {}) });
     } else {
-      // business_owner needs website
+      // business_owner needs website — include role so frontend shows the right field
       const token = issueToken(req.userId!, 'pending_profile');
-      res.json({ token, purpose: 'pending_profile' });
+      res.json({ token, purpose: 'pending_profile', user: { role: user.role } });
     }
   } catch (err) {
     if (err instanceof OtpError) {
