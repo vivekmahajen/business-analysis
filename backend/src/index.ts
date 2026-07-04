@@ -15,6 +15,7 @@ import developerRouter from './routes/developer';
 import termsRouter from './routes/terms';
 import docsRouter from './routes/docs';
 import { startWebhookWorker } from './services/webhookDelivery';
+import { requireFullSession } from './middleware/auth';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -44,12 +45,21 @@ app.use((req, _res, next) => {
 });
 
 app.use('/api/auth', authRouter);
-app.use('/api/reports', reportsRouter);
+// All routes below require a full session token (not pending_2fa / pending_profile).
+// Webhook paths and specified public paths are exempt from the session gate.
+function sessionGate(...publicPaths: string[]) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (publicPaths.some(p => req.path === p)) return next();
+    requireFullSession(req as never, res, next);
+  };
+}
+
+app.use('/api/reports', requireFullSession, reportsRouter);
 app.use('/api/payments/confirm', analysisLimiter);
-app.use('/api/payments', paymentsRouter);
-app.use('/api/admin', adminRouter);
-app.use('/api/billing', billingRouter);
-app.use('/api/llm', llmVisibilityRouter);
+app.use('/api/payments', sessionGate('/webhook'), paymentsRouter);
+app.use('/api/admin', requireFullSession, adminRouter);
+app.use('/api/billing', sessionGate('/webhook', '/plans'), billingRouter);
+app.use('/api/llm', requireFullSession, llmVisibilityRouter);
 app.use('/api/v1', v1Router);
 app.use('/api/developer', developerRouter);
 app.use('/terms', termsRouter);

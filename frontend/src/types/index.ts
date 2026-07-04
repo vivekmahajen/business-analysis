@@ -6,6 +6,21 @@ export interface User {
   createdAt: string;
   plan?: string;
   creditsRemaining?: number;
+  role?: 'user' | 'business_owner';
+  phoneVerified?: boolean;
+  profileComplete?: boolean;
+  websiteUrl?: string | null;
+}
+
+export type AuthPurpose = 'session' | 'pending_2fa' | 'pending_profile';
+
+export interface AuthResponse {
+  token: string;
+  purpose: AuthPurpose;
+  user?: User;
+  phoneHint?: string;
+  needsPhone?: boolean;
+  recoveryCodes?: string[];
 }
 
 export interface Competitor {
@@ -234,7 +249,10 @@ export interface GrowthAdvisorData {
   topQuickWin: string;
 }
 
-export type Screen = 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report' | 'admin-leads' | 'pricing' | 'reset-password';
+export type Screen =
+  | 'landing' | 'auth' | 'dashboard' | 'found' | 'payment' | 'gen' | 'report'
+  | 'admin-leads' | 'pricing' | 'reset-password'
+  | 'verify-otp' | 'complete-profile' | 'recovery-codes';
 export type AuthMode = 'login' | 'register' | 'forgot';
 
 // Admin Lead Discovery types

@@ -20,6 +20,14 @@ model User {
   stripeCustomerId   String?             @map("stripe_customer_id") @db.VarChar(255)
   stripeSubId        String?             @map("stripe_sub_id") @db.VarChar(255)
   planExpiresAt      DateTime?           @map("plan_expires_at")
+  // 2FA + profile fields
+  phone              String?             @unique @db.VarChar(20)
+  phoneVerified      Boolean             @default(false) @map("phone_verified")
+  phoneVerifiedAt    DateTime?           @map("phone_verified_at")
+  role               String              @default("user") @db.VarChar(30)
+  websiteUrl         String?             @unique @map("website_url") @db.VarChar(2048)
+  websiteVerified    Boolean             @default(false) @map("website_verified")
+  profileComplete    Boolean             @default(false) @map("profile_complete")
   reports            Report[]
   payments           Payment[]
   agreements         UserAgreement[]
@@ -29,8 +37,54 @@ model User {
   resetTokens        PasswordResetToken[]
   llmAudits          LlmAudit[]
   apiKeys            ApiKey[]
+  otpChallenges      OtpChallenge[]
+  recoveryCodes      RecoveryCode[]
+  authAuditLogs      AuthAuditLog[]
 
   @@map("users")
+}
+
+model OtpChallenge {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  purpose     String   @db.VarChar(30)
+  otpHash     String   @map("otp_hash") @db.VarChar(64)
+  expiresAt   DateTime @map("expires_at")
+  attempts    Int      @default(0)
+  lastSentAt  DateTime @default(now()) @map("last_sent_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("otp_challenges")
+}
+
+model RecoveryCode {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash") @db.VarChar(64)
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("recovery_codes")
+}
+
+model AuthAuditLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  event     String   @db.VarChar(50)
+  success   Boolean
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("auth_audit_logs")
 }
 
 model PasswordResetToken {

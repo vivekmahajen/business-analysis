@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { User, AnalysisData, GrowthAdvisorData, ReviewIntelligenceData, AnalysisEntry, Screen, AuthMode } from './types';
+import { User, AnalysisData, GrowthAdvisorData, ReviewIntelligenceData, AnalysisEntry, Screen, AuthMode, AuthResponse } from './types';
 import { api, CreditExhaustedError, BillingStatus } from './utils/api';
 import { LanguageProvider } from './i18n';
 import LandingScreen from './components/LandingScreen';
@@ -15,6 +15,9 @@ import AdminLeadDiscoveryScreen from './components/AdminLeadDiscoveryScreen';
 import PricingScreen from './components/PricingScreen';
 import ResetPasswordScreen from './components/ResetPasswordScreen';
 import UpgradeModal from './components/UpgradeModal';
+import OTPVerifyScreen from './components/OTPVerifyScreen';
+import CompleteProfileScreen from './components/CompleteProfileScreen';
+import RecoveryCodesScreen from './components/RecoveryCodesScreen';
 
 const PLANS_LABEL: Record<string, string> = {
   free: 'Free', starter: 'Starter', pro: 'Pro', agency: 'Agency',
@@ -44,6 +47,12 @@ function AppInner() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
   const billingRefreshPending = useRef(false);
+  // 2FA / profile setup state (not persisted to localStorage)
+  const [pendingToken, setPendingToken] = useState<string | null>(null);
+  const [phoneHint, setPhoneHint] = useState('');
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [pendingUserRole, setPendingUserRole] = useState<string>('user');
+  const [pendingNeedsPhone, setPendingNeedsPhone] = useState(false);
 
   // Detect password-reset token in URL before restoring session
   useEffect(() => {
@@ -117,12 +126,39 @@ function AppInner() {
     }
   }, [user, screen, loadReports, loadBillingStatus]);
 
-  const handleAuth = useCallback((u: User, token: string) => {
-    localStorage.setItem('sap_token', token);
-    localStorage.setItem('sap_user', JSON.stringify(u));
-    setUser(u);
-    setScreen('dashboard');
+  const handleAuthResponse = useCallback((response: AuthResponse) => {
     setError('');
+    const purpose = response.purpose ?? 'session';
+
+    if (purpose === 'pending_2fa') {
+      setPendingToken(response.token);
+      setPhoneHint(response.phoneHint ?? '');
+      setScreen('verify-otp');
+      return;
+    }
+
+    if (purpose === 'pending_profile') {
+      setPendingToken(response.token);
+      setPendingNeedsPhone(response.needsPhone ?? false);
+      // Carry role from user object if available
+      if (response.user?.role) setPendingUserRole(response.user.role);
+      setScreen('complete-profile');
+      return;
+    }
+
+    // Full session
+    if (response.user) {
+      localStorage.setItem('sap_token', response.token);
+      localStorage.setItem('sap_user', JSON.stringify(response.user));
+      setUser(response.user);
+      setPendingToken(null);
+      if (response.recoveryCodes?.length) {
+        setRecoveryCodes(response.recoveryCodes);
+        setScreen('recovery-codes');
+      } else {
+        setScreen('dashboard');
+      }
+    }
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -330,10 +366,42 @@ function AppInner() {
       <AuthScreen
         mode={authMode}
         onToggleMode={() => setAuthMode(m => m === 'login' ? 'register' : 'login')}
-        onSuccess={handleAuth}
+        onSuccess={handleAuthResponse}
         onBack={() => setScreen('landing')}
         error={error}
         setError={setError}
+      />
+    );
+  }
+
+  if (screen === 'verify-otp') {
+    return (
+      <OTPVerifyScreen
+        pendingToken={pendingToken!}
+        phoneHint={phoneHint}
+        onSuccess={handleAuthResponse}
+        onBack={() => { setPendingToken(null); setScreen('auth'); setAuthMode('login'); }}
+      />
+    );
+  }
+
+  if (screen === 'complete-profile') {
+    return (
+      <CompleteProfileScreen
+        pendingToken={pendingToken!}
+        needsPhone={pendingNeedsPhone}
+        userRole={pendingUserRole}
+        onSuccess={handleAuthResponse}
+        onOtpRequired={handleAuthResponse}
+      />
+    );
+  }
+
+  if (screen === 'recovery-codes') {
+    return (
+      <RecoveryCodesScreen
+        codes={recoveryCodes}
+        onDone={() => { setRecoveryCodes([]); setScreen('dashboard'); }}
       />
     );
   }

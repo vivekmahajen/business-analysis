@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, AuthMode } from '../types';
+import { AuthMode, AuthResponse } from '../types';
 import { api } from '../utils/api';
 import { useI18n } from '../i18n';
 import LanguagePicker from './LanguagePicker';
@@ -7,7 +7,7 @@ import LanguagePicker from './LanguagePicker';
 interface Props {
   mode: AuthMode;
   onToggleMode: () => void;
-  onSuccess: (user: User, token: string) => void;
+  onSuccess: (response: AuthResponse) => void;
   onBack: () => void;
   error: string;
   setError: (e: string) => void;
@@ -37,6 +37,8 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<'user' | 'business_owner'>('user');
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
@@ -52,13 +54,13 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
     setError('');
     setLoading(true);
     try {
-      let result: { user: User; token: string };
+      let result: AuthResponse;
       if (mode === 'register') {
-        result = await api.register(name, email, password) as { user: User; token: string };
+        result = await api.register(name, email, password, phone, role);
       } else {
-        result = await api.login(email, password) as { user: User; token: string };
+        result = await api.login(email, password);
       }
-      onSuccess(result.user, result.token);
+      onSuccess(result);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -178,20 +180,64 @@ export default function AuthScreen({ mode, onToggleMode, onSuccess, onBack, erro
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === 'register' && (
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">{t.fullNameLabel}</label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                  placeholder="Jane Smith"
-                  autoComplete="name"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">{t.fullNameLabel}</label>
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    placeholder="Jane Smith"
+                    autoComplete="name"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    required
+                    placeholder="(555) 123-4567"
+                    autoComplete="tel"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">US phone. Used for two-factor security — no marketing texts.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Account type</label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setRole('user')}
+                      className={`flex-1 py-2.5 px-4 rounded-xl border text-sm font-medium transition-all ${
+                        role === 'user'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Regular user
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRole('business_owner')}
+                      className={`flex-1 py-2.5 px-4 rounded-xl border text-sm font-medium transition-all ${
+                        role === 'business_owner'
+                          ? 'border-blue-500 bg-blue-50 text-blue-700'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      Business owner
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
 
             <div>

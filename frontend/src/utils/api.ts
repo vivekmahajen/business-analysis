@@ -17,8 +17,8 @@ export class CreditExhaustedError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const token = getToken();
+async function request<T>(path: string, options: RequestInit = {}, explicitToken?: string): Promise<T> {
+  const token = explicitToken ?? getToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -58,17 +58,41 @@ export interface BillingStatus {
 }
 
 export const api = {
-  register: (name: string, email: string, password: string) =>
-    request<{ user: { id: string; name: string; email: string }; token: string }>('/auth/register', {
+  register: (name: string, email: string, password: string, phone: string, role?: 'user' | 'business_owner') =>
+    request<import('../types').AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, agreedToTerms: true }),
+      body: JSON.stringify({ name, email, password, phone, role: role ?? 'user', agreedToTerms: true }),
     }),
 
-  login: (email: string, password: string) =>
-    request<{ user: { id: string; name: string; email: string }; token: string }>('/auth/login', {
+  login: (email: string, password: string, recoveryCode?: string) =>
+    request<import('../types').AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, ...(recoveryCode ? { recoveryCode } : {}) }),
     }),
+
+  sendOtp: (pendingToken: string) =>
+    request<{ message: string }>('/auth/otp/send', { method: 'POST' }, pendingToken),
+
+  verifyOtp: (pendingToken: string, code: string) =>
+    request<import('../types').AuthResponse>('/auth/otp/verify', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }, pendingToken),
+
+  updatePhone: (pendingToken: string, phone: string) =>
+    request<import('../types').AuthResponse>('/auth/phone/update', {
+      method: 'POST',
+      body: JSON.stringify({ phone }),
+    }, pendingToken),
+
+  completeProfile: (pendingToken: string, websiteUrl?: string) =>
+    request<import('../types').AuthResponse>('/auth/profile/complete', {
+      method: 'POST',
+      body: JSON.stringify({ websiteUrl }),
+    }, pendingToken),
+
+  getMe: () =>
+    request<{ user: import('../types').User }>('/auth/me'),
 
   forgotPassword: (email: string) =>
     request<{ message: string }>('/auth/forgot-password', {
