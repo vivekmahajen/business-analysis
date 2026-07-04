@@ -132,7 +132,7 @@ export interface ReviewRecommendation {
 
 export interface ReviewSignals {
   rating_text_mismatches: number;
-  suspected_fake: string[];
+  suspected_fake?: string[]; // present in raw analysis; suppressed in consumer payload
   emerging: string[];
   resolved: string[];
   trend: 'improving' | 'declining' | 'stable' | 'not_assessable';
@@ -156,6 +156,9 @@ export interface ReviewIntelligenceData {
   signals: ReviewSignals;
   recommendations: ReviewRecommendation[];
   limitations: string;
+  _consumer_filtered?: true;
+  _filtered_at?: string;
+  _items_removed?: number;
 }
 
 // Growth Advisor types

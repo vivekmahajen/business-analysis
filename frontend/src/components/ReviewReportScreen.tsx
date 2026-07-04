@@ -282,9 +282,9 @@ export default function ReviewReportScreen({ data, url, generatedAt, onBack }: P
                 <strong>Resolved:</strong> {signals.resolved.join(' · ')}
               </div>
             )}
-            {signals.suspected_fake?.length > 0 && (
+            {(signals.suspected_fake?.length ?? 0) > 0 && (
               <div className="mt-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
-                <strong>Suspected fake/spam signals:</strong> {signals.suspected_fake.join(' · ')}
+                <strong>Suspected fake/spam signals:</strong> {signals.suspected_fake?.join(' · ')}
               </div>
             )}
           </section>

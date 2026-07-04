@@ -40,7 +40,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   } catch {
     throw new Error(res.ok ? 'Unexpected server response' : `Server error ${res.status} — please try again`);
   }
-  if (res.status === 402 && data.code === 'CREDITS_EXHAUSTED') {
+  if (res.status === 402 && (data.code === 'CREDITS_EXHAUSTED' || data.code === 'INSUFFICIENT_CREDITS')) {
     throw new CreditExhaustedError(data as { error: string; plan: string; creditsRemaining: number });
   }
   if (!res.ok) throw new Error((data.error as string) || 'Request failed');

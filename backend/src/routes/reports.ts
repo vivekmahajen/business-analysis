@@ -6,7 +6,10 @@ import { checkAndDeductCredit } from '../middleware/credits';
 import { generateAnalysis } from '../services/analysis';
 import { generateGrowthAnalysis } from '../services/growthAnalysis';
 import { generateReviewAnalysis } from '../services/reviewAnalysis';
+import { applyConsumerFilter, RawReviewAnalysis } from '../services/consumerFilter';
 import { upsertScore } from '../services/scoreCache';
+
+const REVIEW_COST = 15; // tokens per fresh review report
 
 const router = Router();
 
@@ -36,29 +39,93 @@ interface ReviewJob {
 }
 const reviewJobs = new Map<string, ReviewJob>();
 
-function startReviewJob(userId: string, url: string): string {
+/**
+ * Start a background review analysis job.
+ *
+ * Credits are deducted BEFORE this function is called (optimistic pre-charge).
+ * If the job fails, the caller is responsible for issuing a refund transaction.
+ * bypassCredits=true means no deduction was made and no refund is needed.
+ */
+function startReviewJob(
+  userId: string,
+  url: string,
+  idempotencyKey: string,
+  bypassCredits: boolean,
+): string {
   const jobId = crypto.randomUUID();
   reviewJobs.set(jobId, { status: 'pending' });
 
   generateReviewAnalysis(url)
-    .then(async (analysisData) => {
-      const report = await prisma.report.create({
-        data: {
-          userId,
-          url,
-          urlHash: hashUrl(url),
-          radiusMi: 0,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          reportData: analysisData as any,
-          reportType: 'review',
-          paidAmount: 0,
-        },
+    .then(async (rawAnalysis) => {
+      // Apply the Consumer Publish Safety Filter before storing
+      const publishedData = applyConsumerFilter(rawAnalysis as RawReviewAnalysis);
+
+      // Atomic: save immutable report snapshot + link credit transaction to report
+      const report = await prisma.$transaction(async (tx) => {
+        const created = await tx.report.create({
+          data: {
+            userId,
+            url,
+            urlHash: hashUrl(url),
+            radiusMi: 0,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            reportData: rawAnalysis as any,
+            reportType: 'review',
+            paidAmount: 0,
+            audienceMode: 'consumer',
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            publishedData: publishedData as any,
+            costTokens: bypassCredits ? 0 : REVIEW_COST,
+          },
+        });
+
+        // Link the pre-charged credit transaction to this report
+        if (!bypassCredits) {
+          await tx.creditTransaction.update({
+            where: { idempotencyKey },
+            data: { reportId: created.id },
+          });
+        }
+
+        return created;
       });
+
       reviewJobs.set(jobId, { status: 'completed', reportId: report.id });
     })
-    .catch((err) => {
+    .catch(async (err) => {
       console.error('[review] job error:', err);
       reviewJobs.set(jobId, { status: 'failed', error: 'Failed to generate review analysis' });
+
+      // Auto-refund the pre-charged credits on failure
+      if (!bypassCredits) {
+        try {
+          await prisma.$transaction(async (tx) => {
+            const user = await tx.user.findUnique({
+              where: { id: userId },
+              select: { creditsRemaining: true },
+            });
+            const balanceAfter = (user?.creditsRemaining ?? 0) + REVIEW_COST;
+
+            await tx.user.update({
+              where: { id: userId },
+              data: { creditsRemaining: { increment: REVIEW_COST } },
+            });
+
+            await tx.creditTransaction.create({
+              data: {
+                userId,
+                delta: REVIEW_COST,
+                reason: 'review_report_refund',
+                idempotencyKey: `refund-${idempotencyKey}`,
+                balanceAfter,
+              },
+            });
+          });
+          console.log(`[review] refunded ${REVIEW_COST} credits to user ${userId}`);
+        } catch (refundErr) {
+          console.error('[review] refund failed — manual review required:', refundErr);
+        }
+      }
     })
     .finally(() => {
       // Clean up after 10 minutes
@@ -74,14 +141,14 @@ router.get('/', requireAuth, async (req: AuthRequest, res: Response): Promise<vo
     const reports = await prisma.report.findMany({
       where: { userId: req.userId! },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, reportType: true, city: true, state: true },
+      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, publishedData: true, reportType: true, city: true, state: true },
     });
     res.json(reports.map((r: typeof reports[number]) => ({
       id: r.id,
       url: r.url,
       radius: r.radiusMi,
       at: r.createdAt,
-      data: r.reportData,
+      data: r.reportType === 'review' ? (r.publishedData ?? r.reportData) : r.reportData,
       reportType: r.reportType,
       city: r.city,
       state: r.state,
@@ -103,7 +170,7 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
     const report = await prisma.report.findFirst({
       where: { userId: req.userId!, urlHash: hash },
       orderBy: { createdAt: 'desc' },
-      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, reportType: true },
+      select: { id: true, url: true, radiusMi: true, createdAt: true, reportData: true, publishedData: true, reportType: true },
     });
     if (report) {
       res.json({
@@ -113,7 +180,8 @@ router.get('/check', requireAuth, async (req: AuthRequest, res: Response): Promi
           url: report.url,
           radius: report.radiusMi,
           at: report.createdAt,
-          data: report.reportData,
+          // Serve consumer-filtered snapshot for review reports
+          data: report.reportType === 'review' ? (report.publishedData ?? report.reportData) : report.reportData,
           reportType: report.reportType,
         },
       });
@@ -214,12 +282,61 @@ router.post('/generate-growth', requireAuth, checkAndDeductCredit, async (req: A
 });
 
 // POST /api/reports/generate-review — starts async job, returns jobId immediately
-router.post('/generate-review', requireAuth, checkAndDeductCredit, (req: AuthRequest, res: Response): void => {
+// Credits are checked and deducted upfront; refund issued automatically on failure.
+router.post('/generate-review', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
   const { url } = req.body;
   if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
   if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL: private/local addresses not allowed' }); return; }
-  const jobId = startReviewJob(req.userId!, url);
-  res.status(202).json({ jobId });
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId! },
+      select: { isAdmin: true, plan: true, creditsRemaining: true },
+    });
+    if (!user) { res.status(404).json({ error: 'User not found' }); return; }
+
+    const bypassCredits = user.isAdmin || user.plan === 'agency';
+    let idempotencyKey = '';
+
+    if (!bypassCredits) {
+      if (user.creditsRemaining < REVIEW_COST) {
+        res.status(402).json({
+          error: `Review Intelligence requires ${REVIEW_COST} credits. You have ${user.creditsRemaining} remaining. Please top up your account.`,
+          code: 'CREDITS_EXHAUSTED',
+          plan: user.plan,
+          creditsRemaining: user.creditsRemaining,
+          required: REVIEW_COST,
+        });
+        return;
+      }
+
+      // Pre-charge: deduct credits before starting the job
+      idempotencyKey = `rev-${req.userId}-${crypto.randomUUID()}`;
+      const balanceAfter = user.creditsRemaining - REVIEW_COST;
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: req.userId! },
+          data: { creditsRemaining: { decrement: REVIEW_COST } },
+        }),
+        prisma.creditTransaction.create({
+          data: {
+            userId: req.userId!,
+            delta: -REVIEW_COST,
+            reason: 'review_report_generated',
+            idempotencyKey,
+            balanceAfter,
+          },
+        }),
+      ]);
+    }
+
+    const jobId = startReviewJob(req.userId!, url, idempotencyKey, bypassCredits);
+    res.status(202).json({ jobId });
+  } catch (err) {
+    console.error('[review] generate-review error:', err);
+    res.status(500).json({ error: 'Failed to start review analysis' });
+  }
 });
 
 // POST /api/reports/generate-review-admin — admin bypass, also async
@@ -227,7 +344,7 @@ router.post('/generate-review-admin', requireAuth, requireAdmin, (req: AuthReque
   const { url } = req.body;
   if (!url) { res.status(400).json({ error: 'URL is required' }); return; }
   if (!validateUrl(url)) { res.status(400).json({ error: 'Invalid URL' }); return; }
-  const jobId = startReviewJob(req.userId!, url);
+  const jobId = startReviewJob(req.userId!, url, '', true);
   res.status(202).json({ jobId });
 });
 
@@ -256,7 +373,15 @@ router.get('/review-job/:jobId', requireAuth, async (req: AuthRequest, res: Resp
     }
     res.json({
       status: 'completed',
-      report: { id: report.id, url: report.url, radius: 0, at: report.createdAt, data: report.reportData, reportType: 'review' },
+      report: {
+        id: report.id,
+        url: report.url,
+        radius: 0,
+        at: report.createdAt,
+        // Serve the consumer-filtered snapshot; fall back to raw data for admin/legacy rows
+        data: report.publishedData ?? report.reportData,
+        reportType: 'review',
+      },
     });
   } catch {
     res.status(500).json({ error: 'Failed to fetch report' });
@@ -278,7 +403,7 @@ router.get('/:id', requireAuth, async (req: AuthRequest, res: Response): Promise
       url: report.url,
       radius: report.radiusMi,
       at: report.createdAt,
-      data: report.reportData,
+      data: report.reportType === 'review' ? (report.publishedData ?? report.reportData) : report.reportData,
       reportType: report.reportType,
       city: report.city,
       state: report.state,

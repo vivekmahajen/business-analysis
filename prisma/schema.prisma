@@ -46,13 +46,15 @@ model PasswordResetToken {
 }
 
 model CreditTransaction {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String   @map("user_id") @db.Uuid
-  delta     Int
-  reason    String   @db.VarChar(100)
-  reportId  String?  @map("report_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  user      User     @relation(fields: [userId], references: [id])
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  delta          Int
+  reason         String   @db.VarChar(100)
+  reportId       String?  @map("report_id") @db.Uuid
+  idempotencyKey String?  @unique @map("idempotency_key") @db.VarChar(100)
+  balanceAfter   Int?     @map("balance_after")
+  createdAt      DateTime @default(now()) @map("created_at")
+  user           User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@map("credit_transactions")
@@ -86,19 +88,22 @@ model CreditPurchase {
 }
 
 model Report {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId     String   @map("user_id") @db.Uuid
-  url        String   @db.VarChar(2048)
-  urlHash    String   @map("url_hash") @db.VarChar(64)
-  radiusMi   Int      @map("radius_mi")
-  reportData Json     @map("report_data")
-  paidAmount Int      @default(9900) @map("paid_amount")
-  stripePi   String?  @map("stripe_pi") @db.VarChar(255)
-  createdAt  DateTime @default(now()) @map("created_at")
-  reportType String   @default("competitive") @map("report_type") @db.VarChar(20)
-  city       String?  @db.VarChar(100)
-  state      String?  @db.VarChar(100)
-  user       User     @relation(fields: [userId], references: [id])
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  url           String   @db.VarChar(2048)
+  urlHash       String   @map("url_hash") @db.VarChar(64)
+  radiusMi      Int      @map("radius_mi")
+  reportData    Json     @map("report_data")
+  paidAmount    Int      @default(9900) @map("paid_amount")
+  stripePi      String?  @map("stripe_pi") @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at")
+  reportType    String   @default("competitive") @map("report_type") @db.VarChar(20)
+  city          String?  @db.VarChar(100)
+  state         String?  @db.VarChar(100)
+  audienceMode  String   @default("consumer") @map("audience_mode") @db.VarChar(20)
+  publishedData Json?    @map("published_data")
+  costTokens    Int      @default(1) @map("cost_tokens")
+  user          User     @relation(fields: [userId], references: [id])
 
   @@index([userId, urlHash], name: "idx_reports_user_url")
   @@map("reports")

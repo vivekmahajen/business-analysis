@@ -15,6 +15,9 @@ STEP 2 — ANALYZE: Apply rigorous aspect-level sentiment analysis using ONLY th
 6. ACCOUNT FOR SELECTION BIAS. Reviewers skew extreme; frame as "what reviewers said."
 7. WEIGHT BY FREQUENCY AND RECENCY. A theme in 12 reviews outranks a vivid one-off.
 8. PROTECT PEOPLE. Refer to staff by role, not name. Frame safety/legal allegations neutrally.
+   - For each pain_point, set "safety_flag": true if it involves a safety, legal, or conduct allegation.
+   - Set "names_individual": true if the claim attributes conduct to a named person (owner, employee, etc.).
+   - Set "verified": true ONLY if the claim is corroborated by multiple independent reviews or a live authoritative source. A single anonymous review, or a third-party flag (e.g., BuildZoom license status), is NOT verified.
 9. QUOTE SPARINGLY. Short representative snippets only.
 10. STAY CALIBRATED ON CAUSE. Hypothesize root causes but never state them as confirmed.
 11. BE FAIR AND NEUTRAL. No hype, no doom.
@@ -33,7 +36,7 @@ After gathering and analyzing, respond with ONLY this JSON — no prose, no mark
   "overall_sentiment": {"positive": 0, "neutral": 0, "negative": 0, "mixed": 0},
   "aspects": [{"aspect": "", "positive": 0, "neutral": 0, "negative": 0, "frequency": 0, "example": "", "note": ""}],
   "loves": [{"theme": "", "frequency": 0, "example": ""}],
-  "pain_points": [{"theme": "", "frequency": 0, "severity": "low|medium|high", "safety_flag": false, "example": ""}],
+  "pain_points": [{"theme": "", "frequency": 0, "severity": "low|medium|high", "safety_flag": false, "verified": false, "names_individual": false, "example": ""}],
   "signals": {"rating_text_mismatches": 0, "suspected_fake": [], "emerging": [], "resolved": [], "trend": "improving|declining|stable|not_assessable"},
   "recommendations": [{"theme": "", "action": "", "type": "quick_win|structural", "expected_impact": "", "impact_is_hypothesis": true, "how_to_measure": ""}],
   "limitations": ""

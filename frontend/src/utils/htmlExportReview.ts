@@ -200,7 +200,7 @@ export function generateReviewHtmlReport(data: ReviewIntelligenceData, url: stri
     </div>
     ${signals.emerging?.length > 0 ? `<div class="alert-box alert-amber"><strong>Emerging:</strong> ${signals.emerging.join(' · ')}</div>` : ''}
     ${signals.resolved?.length > 0 ? `<div class="alert-box alert-green"><strong>Resolved:</strong> ${signals.resolved.join(' · ')}</div>` : ''}
-    ${signals.suspected_fake?.length > 0 ? `<div class="alert-box alert-red"><strong>Suspected fake/spam:</strong> ${signals.suspected_fake.join(' · ')}</div>` : ''}
+    ${(signals.suspected_fake?.length ?? 0) > 0 ? `<div class="alert-box alert-red"><strong>Suspected fake/spam:</strong> ${signals.suspected_fake?.join(' · ')}</div>` : ''}
   </section>` : ''}
 
   ${recommendations?.length > 0 ? `

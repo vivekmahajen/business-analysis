@@ -136,11 +136,6 @@ function AppInner() {
     setPendState(state || '');
     setPendUrl(url);
     setPendRad(rad);
-    // Review reports always generate fresh — skip the "found existing" check
-    if (reportType === 'review') {
-      startGeneration(url, rad, undefined, 'review');
-      return;
-    }
     try {
       const result = await api.checkReport(url) as { found: boolean; report?: AnalysisEntry };
       if (result.found && result.report) {

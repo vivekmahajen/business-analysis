@@ -182,11 +182,52 @@ function GrowthPreview({ data }: { data: GrowthAdvisorData }) {
   );
 }
 
+function ReviewPreview({ data }: { data: { meta?: { reviews_analyzed?: number; avg_rating?: number | null; confidence?: string }; loves?: Array<{ theme: string }>; pain_points?: Array<{ theme: string }> } }) {
+  const meta = data?.meta;
+  return (
+    <div className="bg-white border border-violet-100 rounded-2xl p-6 space-y-4">
+      <div className="flex items-center gap-4">
+        <div className="bg-violet-50 rounded-xl px-4 py-3 text-center min-w-[80px]">
+          <div className="text-2xl font-bold text-violet-700">{meta?.avg_rating?.toFixed(1) ?? '—'}</div>
+          <div className="text-xs text-violet-400 mt-0.5">avg rating</div>
+        </div>
+        <div>
+          <div className="font-semibold text-gray-900">{meta?.reviews_analyzed ?? 0} reviews analyzed</div>
+          <div className="text-sm text-gray-500 capitalize">Confidence: {meta?.confidence ?? 'unknown'}</div>
+        </div>
+      </div>
+      {(data?.loves?.length ?? 0) > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">What customers love</div>
+          {data.loves!.slice(0, 2).map((l, i) => (
+            <div key={i} className="text-sm text-gray-700 py-0.5">• {l.theme}</div>
+          ))}
+        </div>
+      )}
+      {(data?.pain_points?.length ?? 0) > 0 && (
+        <div>
+          <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Areas to improve</div>
+          {data.pain_points!.slice(0, 2).map((p, i) => (
+            <div key={i} className="text-sm text-gray-700 py-0.5">• {p.theme}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FoundScreen({ entry, isAdmin, onViewFree, onGenerateNew, onBack }: Props) {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   const isGrowth = entry.reportType === 'growth';
+  const isReview = entry.reportType === 'review';
+
+  const viewBtnClass = isReview
+    ? 'bg-violet-600 hover:bg-violet-700'
+    : isGrowth
+      ? 'bg-emerald-600 hover:bg-emerald-700'
+      : 'bg-blue-600 hover:bg-blue-700';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -204,24 +245,26 @@ export default function FoundScreen({ entry, isAdmin, onViewFree, onGenerateNew,
             ✓
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-semibold text-gray-900">Report already exists for this URL</div>
+            <div className="font-semibold text-gray-900">Saved report found for this URL</div>
             <div className="text-xs text-gray-400 truncate mt-0.5">{entry.url} · Generated {formatDate(entry.at)}</div>
           </div>
         </div>
 
         {/* Report preview */}
-        {isGrowth
-          ? <GrowthPreview data={entry.data as unknown as GrowthAdvisorData} />
-          : <CompetitivePreview data={entry.data as AnalysisData} />
+        {isReview
+          ? <ReviewPreview data={entry.data as unknown as { meta?: { reviews_analyzed?: number; avg_rating?: number | null; confidence?: string }; loves?: Array<{ theme: string }>; pain_points?: Array<{ theme: string }> }} />
+          : isGrowth
+            ? <GrowthPreview data={entry.data as unknown as GrowthAdvisorData} />
+            : <CompetitivePreview data={entry.data as AnalysisData} />
         }
 
         {/* Action buttons */}
         <div className="mt-8 space-y-3">
           <button
             onClick={onViewFree}
-            className={`w-full font-semibold py-3.5 rounded-xl transition-colors text-white ${isGrowth ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+            className={`w-full font-semibold py-3.5 rounded-xl transition-colors text-white ${viewBtnClass}`}
           >
-            View Full Report — Free
+            View Saved Report — Free
           </button>
           <button
             onClick={onGenerateNew}
@@ -231,11 +274,17 @@ export default function FoundScreen({ entry, isAdmin, onViewFree, onGenerateNew,
                 : 'border border-gray-200 text-gray-700 hover:bg-gray-50'
             }`}
           >
-            {isAdmin ? 'Generate Fresh Report — Free' : 'Generate Fresh Report'}
+            {isAdmin
+              ? 'Generate Fresh Report — Free'
+              : isReview
+                ? 'Generate Fresh Report — 15 tokens'
+                : 'Generate Fresh Report — 1 token'}
           </button>
         </div>
         <p className="text-xs text-gray-400 text-center mt-3">
-          A fresh report re-runs the full analysis with current data
+          {isReview
+            ? 'Newer reviews may have appeared since this report was generated.'
+            : 'A fresh report re-runs the full analysis with current data.'}
         </p>
       </div>
     </div>
