@@ -361,6 +361,7 @@ function AppInner() {
             currentPlan={billingStatus?.plan || 'free'}
             onClose={() => setShowUpgradeModal(false)}
             onViewPricing={() => { setShowUpgradeModal(false); setScreen('pricing'); }}
+            onSuccess={() => loadBillingStatus()}
           />
         )}
       </>

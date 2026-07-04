@@ -5,6 +5,7 @@ interface Props {
   currentPlan: string;
   onClose: () => void;
   onViewPricing: () => void;
+  onSuccess?: () => void;
 }
 
 const PLANS = [
@@ -13,9 +14,10 @@ const PLANS = [
   { id: 'agency', name: 'Agency', credits: -1, priceCents: 19900, highlight: false },
 ];
 
-export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Props) {
+export default function UpgradeModal({ currentPlan, onClose, onViewPricing, onSuccess }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const upgradePlans = PLANS.filter(p => p.id !== currentPlan);
 
@@ -23,8 +25,10 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Pr
     setError('');
     setLoading(planId);
     try {
-      const { url } = await api.createCheckout(planId, 'month');
-      window.location.href = url;
+      const result = await api.demoUpgrade(planId);
+      const plan = PLANS.find(p => p.id === planId);
+      setSuccessMsg(`Upgraded to ${plan?.name ?? planId} — ${result.creditsRemaining === 999999 ? 'unlimited' : result.creditsRemaining} credits`);
+      onSuccess?.();
     } catch (e) {
       setError((e as Error).message);
       setLoading(null);
@@ -33,10 +37,11 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Pr
 
   const handleAddon = async () => {
     setError('');
-    setLoading('pack_10');
+    setLoading('pack_25');
     try {
-      const { url } = await api.createAddonCheckout('pack_10');
-      window.location.href = url;
+      const result = await api.demoAddCredits(25);
+      setSuccessMsg(`${result.creditsAdded} credits added — you now have ${result.creditsRemaining}`);
+      onSuccess?.();
     } catch (e) {
       setError((e as Error).message);
       setLoading(null);
@@ -63,82 +68,97 @@ export default function UpgradeModal({ currentPlan, onClose, onViewPricing }: Pr
         </div>
 
         <div className="p-6">
-          {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Quick upgrade options */}
-          <div className="space-y-3 mb-5">
-            {upgradePlans.map(plan => (
+          {successMsg ? (
+            <div className="text-center py-6">
+              <div className="text-4xl mb-3">✓</div>
+              <div className="font-semibold text-gray-900 mb-1">{successMsg}</div>
               <button
-                key={plan.id}
-                onClick={() => handleUpgrade(plan.id)}
+                onClick={onClose}
+                className="mt-4 bg-blue-600 text-white font-semibold px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          ) : (
+            <>
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Quick upgrade options */}
+              <div className="space-y-3 mb-5">
+                {upgradePlans.map(plan => (
+                  <button
+                    key={plan.id}
+                    onClick={() => handleUpgrade(plan.id)}
+                    disabled={!!loading}
+                    className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
+                      plan.highlight
+                        ? 'border-blue-500 bg-blue-50 hover:bg-blue-100'
+                        : 'border-gray-200 bg-white hover:bg-gray-50'
+                    } disabled:opacity-60`}
+                  >
+                    <div className="text-left">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-semibold ${plan.highlight ? 'text-blue-900' : 'text-gray-900'}`}>{plan.name}</span>
+                        {plan.highlight && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-medium">Recommended</span>}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-0.5">
+                        {plan.credits === -1 ? 'Unlimited credits' : `${plan.credits} credits/month`}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0 ml-4">
+                      <div className={`font-bold ${plan.highlight ? 'text-blue-700' : 'text-gray-700'}`}>
+                        ${(plan.priceCents / 100).toFixed(0)}/mo
+                      </div>
+                      {loading === plan.id ? (
+                        <div className="text-xs text-gray-400 mt-0.5">Activating…</div>
+                      ) : (
+                        <div className={`text-xs mt-0.5 ${plan.highlight ? 'text-blue-500' : 'text-gray-400'}`}>Subscribe →</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400">or buy a one-time pack</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+
+              {/* Addon pack quick buy */}
+              <button
+                onClick={handleAddon}
                 disabled={!!loading}
-                className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${
-                  plan.highlight
-                    ? 'border-blue-500 bg-blue-50 hover:bg-blue-100'
-                    : 'border-gray-200 bg-white hover:bg-gray-50'
-                } disabled:opacity-60`}
+                className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
                 <div className="text-left">
-                  <div className="flex items-center gap-2">
-                    <span className={`font-semibold ${plan.highlight ? 'text-blue-900' : 'text-gray-900'}`}>{plan.name}</span>
-                    {plan.highlight && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-medium">Recommended</span>}
-                  </div>
-                  <div className="text-sm text-gray-500 mt-0.5">
-                    {plan.credits === -1 ? 'Unlimited credits' : `${plan.credits} credits/month`}
-                  </div>
+                  <div className="font-medium text-gray-900">25 Credits pack</div>
+                  <div className="text-sm text-gray-500">One-time purchase · never expire · covers Review Intelligence</div>
                 </div>
                 <div className="text-right flex-shrink-0 ml-4">
-                  <div className={`font-bold ${plan.highlight ? 'text-blue-700' : 'text-gray-700'}`}>
-                    ${(plan.priceCents / 100).toFixed(0)}/mo
-                  </div>
-                  {loading === plan.id ? (
-                    <div className="text-xs text-gray-400 mt-0.5">Redirecting…</div>
+                  <div className="font-bold text-gray-700">$30</div>
+                  {loading === 'pack_25' ? (
+                    <div className="text-xs text-gray-400 mt-0.5">Adding…</div>
                   ) : (
-                    <div className={`text-xs mt-0.5 ${plan.highlight ? 'text-blue-500' : 'text-gray-400'}`}>Subscribe →</div>
+                    <div className="text-xs text-gray-400 mt-0.5">Buy once →</div>
                   )}
                 </div>
               </button>
-            ))}
-          </div>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex-1 h-px bg-gray-100" />
-            <span className="text-xs text-gray-400">or buy a one-time pack</span>
-            <div className="flex-1 h-px bg-gray-100" />
-          </div>
-
-          {/* Addon pack quick buy */}
-          <button
-            onClick={handleAddon}
-            disabled={!!loading}
-            className="w-full flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-60"
-          >
-            <div className="text-left">
-              <div className="font-medium text-gray-900">10 Credits pack</div>
-              <div className="text-sm text-gray-500">One-time purchase · never expire</div>
-            </div>
-            <div className="text-right flex-shrink-0 ml-4">
-              <div className="font-bold text-gray-700">$15</div>
-              {loading === 'pack_10' ? (
-                <div className="text-xs text-gray-400 mt-0.5">Redirecting…</div>
-              ) : (
-                <div className="text-xs text-gray-400 mt-0.5">Buy once →</div>
-              )}
-            </div>
-          </button>
-
-          {/* View all pricing */}
-          <button
-            onClick={onViewPricing}
-            className="w-full mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
-          >
-            View all plans and add-ons →
-          </button>
+              {/* View all pricing */}
+              <button
+                onClick={onViewPricing}
+                className="w-full mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+              >
+                View all plans and add-ons →
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

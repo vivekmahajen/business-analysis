@@ -189,6 +189,44 @@ router.post('/portal', requireAuth, async (req: AuthRequest, res: Response): Pro
   }
 });
 
+// POST /api/billing/demo-add-credits — add credits instantly without payment (demo mode)
+router.post('/demo-add-credits', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { credits = 25 } = req.body as { credits?: number };
+  const amount = Math.min(Math.max(1, Number(credits)), 200);
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: req.userId! },
+      data: { creditsRemaining: { increment: amount } },
+    }),
+    prisma.creditTransaction.create({
+      data: { userId: req.userId!, delta: amount, reason: 'demo_purchase' },
+    }),
+  ]);
+  const updated = await prisma.user.findUnique({
+    where: { id: req.userId! },
+    select: { creditsRemaining: true },
+  });
+  res.json({ success: true, creditsAdded: amount, creditsRemaining: updated?.creditsRemaining });
+});
+
+// POST /api/billing/demo-upgrade — change plan instantly without payment (demo mode)
+router.post('/demo-upgrade', requireAuth, async (req: AuthRequest, res: Response): Promise<void> => {
+  const { planId } = req.body as { planId: string };
+  const plan = PLAN_CONFIG[planId as PlanKey];
+  if (!plan) { res.status(400).json({ error: 'Invalid plan' }); return; }
+  const credits = plan.credits === -1 ? 999999 : plan.credits;
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: req.userId! },
+      data: { plan: planId, creditsRemaining: credits },
+    }),
+    prisma.creditTransaction.create({
+      data: { userId: req.userId!, delta: credits, reason: 'demo_plan_upgrade' },
+    }),
+  ]);
+  res.json({ success: true, plan: planId, creditsRemaining: credits });
+});
+
 // POST /api/billing/webhook — Stripe subscription webhook
 router.post('/webhook', async (req: Request, res: Response): Promise<void> => {
   const sig = req.headers['stripe-signature'] as string;

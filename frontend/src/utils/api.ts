@@ -174,6 +174,18 @@ export const api = {
   openBillingPortal: () =>
     request<{ url: string }>('/billing/portal', { method: 'POST' }),
 
+  demoAddCredits: (credits: number) =>
+    request<{ success: boolean; creditsAdded: number; creditsRemaining: number }>('/billing/demo-add-credits', {
+      method: 'POST',
+      body: JSON.stringify({ credits }),
+    }),
+
+  demoUpgrade: (planId: string) =>
+    request<{ success: boolean; plan: string; creditsRemaining: number }>('/billing/demo-upgrade', {
+      method: 'POST',
+      body: JSON.stringify({ planId }),
+    }),
+
   // Admin Lead Discovery
   adminDiscover: (params: {
     category: string; state: string; city: string;
