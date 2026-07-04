@@ -16,6 +16,7 @@ import termsRouter from './routes/terms';
 import docsRouter from './routes/docs';
 import { startWebhookWorker } from './services/webhookDelivery';
 import { requireFullSession } from './middleware/auth';
+import { prisma } from './lib/prisma';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -89,9 +90,9 @@ prisma.llmAudit.updateMany({
     status: 'failed',
     errorMessage: 'Audit was interrupted by a server restart. Please run a new audit.',
   },
-}).then(r => {
+}).then((r: { count: number }) => {
   if (r.count > 0) console.log(`[startup] Reset ${r.count} stuck audit(s) to failed`);
-}).catch(err => console.error('[startup] Failed to reset stuck audits:', err));
+}).catch((err: Error) => console.error('[startup] Failed to reset stuck audits:', err));
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
