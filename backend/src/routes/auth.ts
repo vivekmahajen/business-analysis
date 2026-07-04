@@ -143,7 +143,8 @@ router.post('/register', async (req: Request, res: Response): Promise<void> => {
       phoneHint: maskPhone(normalizedPhone),
     });
   } catch (err) {
-    console.error('[register] error:', err);
+    console.error('[register] error:', err instanceof Error ? err.message : err);
+    console.error('[register] stack:', err instanceof Error ? err.stack : '');
     res.status(500).json({ error: 'Registration failed' });
   }
 });
