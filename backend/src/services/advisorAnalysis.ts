@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../lib/prisma';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -207,7 +208,7 @@ export async function runAdvisorAnalysis(auditId: string): Promise<AdvisorReport
   // Cache the report in the DB
   await prisma.llmAudit.update({
     where: { id: auditId },
-    data: { advisorReport: report as object },
+    data: { advisorReport: report as unknown as Prisma.InputJsonValue },
   });
 
   return report;
